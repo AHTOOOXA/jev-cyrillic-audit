@@ -1,0 +1,83 @@
+{
+  "run_id": "20260920T100011Z",
+  "model": "jev-1.13.0",
+  "sdk_version": "0.7.0",
+  "python": "3.11.16",
+  "seed": 20260919,
+  "n_per_cell": 600,
+  "passes": 2,
+  "instr_lang": "en",
+  "uid_passes": [],
+  "concurrency_rpm_cap": [
+    8,
+    1150.0
+  ],
+  "run_started_utc": "2026-09-20T10:00:19.752Z",
+  "run_finished_utc": "2026-09-20T10:04:34.658Z",
+  "total_calls": 4800,
+  "total_errors_logged": 0,
+  "total_input_tokens": 4620646,
+  "total_cost_usd": 0.1941,
+  "dataset_revisions": {
+    "facebook/xnli": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
+    "mteb/amazon_massive_intent": "940fd47a81eaa7f2cc7b129674d945d618ac38c2"
+  },
+  "items_parquet_sha256": "c5e3ea068a2b3a03ffa703c19773a5108bd49f84b1f1209c728a2185668e43a4",
+  "prereg_sha256": "63255f41427f2d7bec5cafbd6373e88ce43b5d9a5285c1e2aaca3ad8599c9616",
+  "prompts_sha256": {
+    "massive.en.json": "4af8697c8673bc5dd098c0e3dbe8a979b40fbfc11a5a3468aa29e1f378318181",
+    "massive.ru.json": "37590af67715d8a74246557b9cec87dd64c5fe664748b69927c5c8fe04cff558",
+    "xnli.en.json": "cc00403f838dd56bb50560afb191a92a5ce08121375235cefed35b3454b94cf9",
+    "xnli.ru.json": "07d45b0d0ec64091116e82744501d824ea0fcd2d920b7ca997836320ebb8933e"
+  },
+  "cells": {
+    "xnli-en": {
+      "file": "20260920T100011Z-xnli-en.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 507666,
+      "mean_input_tokens": 423.1,
+      "latency_p50_ms": 317.6,
+      "latency_p95_ms": 420.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-ru": {
+      "file": "20260920T100011Z-xnli-ru.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 589744,
+      "mean_input_tokens": 491.5,
+      "latency_p50_ms": 318.6,
+      "latency_p95_ms": 411.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "massive-en": {
+      "file": "20260920T100011Z-massive-en.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 1752502,
+      "mean_input_tokens": 1460.4,
+      "latency_p50_ms": 329.9,
+      "latency_p95_ms": 454.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "massive-ru": {
+      "file": "20260920T100011Z-massive-ru.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 1770734,
+      "mean_input_tokens": 1475.6,
+      "latency_p50_ms": 338.2,
+      "latency_p95_ms": 481.6,
+      "models": [
+        "jev-1.13.0"
+      ]
+    }
+  }
+}
