@@ -1,0 +1,9 @@
+.env
+.upstream/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+hf_cache/
+scratch/
