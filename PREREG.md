@@ -64,7 +64,16 @@ currently best. Other languages … are handled but not equally well."*
   requests is undocumented. The `--scratch` dry run sends 20 items twice, byte-identical. If any
   answer differs, passes are sent identical (`uid` off). If all 40 are bit-identical and pass-1
   latency is markedly lower, pass 1 is sent with a `uid` field in the state and this is recorded
-  here before the freeze. Result: **TODO (fill from the dry run).**
+  here before the freeze. **Result (dry run `dry1`, 2026-09-20, 160 calls):** byte-identical
+  requests returned different probability vectors on 4–14 of 20 items per cell (max |Δp_max|
+  0.04–0.06), latency unchanged, distinct `request_id`s → no response cache. **Passes are sent
+  identical; `uid` is off.**
+- **Dry run and prompt finality.** The dry run used the first 20 items of each dataset's sample
+  (`--limit 20`, written to gitignored `scratch/`). Prompts were finalised from the vendor docs
+  *before* the dry run and were not modified after it; dry-run answers were read by eye only to
+  confirm the Russian responses are sensible.
+- **API precision.** `probabilities` (and `confidence`) are returned rounded to 2 decimals, so
+  `p_max` is quantised in steps of 0.01. Bin edges are handled explicitly (top bin closed).
 - Concurrency 8, client-side pacer ≤ 1,150 rpm, SDK retries honour `retry-after-ms`.
 - Per-row log: `item_id, dataset, lang, instr_lang, pass, gold, pred, choice, p_max, confidence,
   probs, input_tokens, latency_ms, model, request_id, ts`. **Never the source text.**
@@ -90,7 +99,9 @@ currently best. Other languages … are handled but not equally well."*
   reported but never compared to each other.
 - Determinism table per arm: label flip rate between passes, Cohen's κ between passes,
   mean and max |Δp_max|, and the flip-rate difference RU−EN.
-- RU/EN input-token ratio per dataset from `usage.input_tokens` (same items, same prompt).
+- RU/EN input-token ratio per dataset from `usage.input_tokens` (same items, same prompt), two
+  ways: per call (what a user pays) and state-only, subtracting the per-dataset question overhead
+  measured once with a one-character state (`data/question_overhead.json`: XNLI 390, MASSIVE 1,454).
 - `confidence` vs `p_max`: Pearson r and the share of rows with `confidence > p_max`, per arm.
 - Accuracy and share of items in the `p_max == 1.0` bucket, per arm (the vendor's "1.0 → 100%").
 - Coverage and accuracy at the vendor's canonical gates `confidence ≥ 0.5` and `≥ 0.9`, per arm.
@@ -122,10 +133,11 @@ Applied per dataset, in this order:
 
 The README's first sentence states both verdicts for both datasets, with the numbers.
 
-## Sample size
+## Sample size and cost
 n = 600 per cell gives ±2.5 pp on the paired accuracy delta at 10% RU/EN discordance and an ECE
 floor near 0.03–0.05 at 10 bins, enough to separate a ratio-2 effect. Larger n is a follow-up,
-not a deviation.
+not a deviation. Projected from the dry run: 4,800 calls, ≈4.7M input tokens, ≈$0.20, p50 latency
+≈330 ms, ≈5 min wall time at concurrency 8.
 
 ## Not in scope for this run
 Belebele, SIB-200, DaNetQA, TERRa, toxicity, RU instructions (cells C/D), negation probes,

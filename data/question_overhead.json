@@ -1,0 +1,19 @@
+{
+  "xnli": {
+    "input_tokens_with_minimal_state": 390,
+    "minimal_state": {
+      "premise": ".",
+      "hypothesis": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0be3fb32b7bc89c9da89c30b1b3fb"
+  },
+  "massive": {
+    "input_tokens_with_minimal_state": 1454,
+    "minimal_state": {
+      "utterance": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0be3fb4817b1fac3164d211e8173f"
+  }
+}
