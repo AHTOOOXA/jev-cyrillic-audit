@@ -5,10 +5,10 @@
     "premise",
     "hypothesis"
   ],
-  "instructions": "Given the premise, is the hypothesis true, undetermined, or false?",
+  "instructions": "Given `premise`, is `hypothesis` true, undetermined, or false?",
   "criteria": {
-    "entailment": "The premise makes the hypothesis true.",
-    "neutral": "The premise neither makes the hypothesis true nor false.",
-    "contradiction": "The premise makes the hypothesis false."
+    "entailment": "`premise` makes `hypothesis` true.",
+    "neutral": "`premise` neither makes `hypothesis` true nor false.",
+    "contradiction": "`premise` makes `hypothesis` false."
   }
 }

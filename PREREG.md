@@ -38,8 +38,16 @@ on the same human-labelled items?
 ## Design
 - **Cells run in this study:** A = EN state, B = RU state; instruction language = EN in both.
   (Cells C/D, RU instructions, are frozen in `prompts/*.ru.json` but **not run** in this study.)
-- One item per call, one `Choice` question per call. Option keys are English identifiers in every
-  cell (`entailment`, `alarm_set`, …); MASSIVE options carry no glosses (`null`).
+- One item per call, one `Choice` question per call — a deliberate departure from the vendor's
+  "batch many questions per request" guidance, so that each item is judged without other items
+  in the state (vendor failure mode #5, context rot) and per-item token counts are clean.
+- Instructions reference the state fields by backticked key, as the vendor docs prescribe for
+  object states (``Given `premise`, is `hypothesis` true, undetermined, or false?``;
+  ``Which intent does the user's `utterance` express?``).
+- Option keys are English identifiers in every cell (`entailment`, `alarm_set`, …). MASSIVE
+  options carry a one-line **English** gloss each, identical in both arms (vendor docs: `null`
+  descriptions are for self-explanatory names; several MASSIVE intents are not). English keys and
+  glosses in the RU arm are a known leak and are listed as a limitation.
 - Prompts frozen in `prompts/` with `prompts.sha256`. One wording per dataset — a sample of size 1
   from wording space; stated as a limitation.
 - **Two passes** per cell (`pass ∈ {0, 1}`), pass 1 run after pass 0 has completed for all cells.
