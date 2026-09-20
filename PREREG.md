@@ -1,10 +1,9 @@
 # Pre-registration — jev-cyrillic-audit
 
-> Status: **DRAFT — to be frozen before the first non-dry run.** Freeze = `make freeze` (writes
-> `PREREG.sha256` and `prompts/prompts.sha256`), commit both, and only then run anything that is
-> not a `--scratch` dry run. The runner refuses to write to `runs/` unless both hashes verify and
-> the frozen files are clean in git. Edits after freezing go in the dated "Deviations" section at
-> the bottom, never in the body.
+> Status: **FROZEN 2026-09-20 (Sun) before the first non-dry run.** `PREREG.sha256` and
+> `prompts/prompts.sha256` are committed alongside; verify with `make check-prereg`. The runner
+> refuses to write to `runs/` unless both hashes verify and the frozen files are clean in git.
+> Edits after this point go in the dated "Deviations" section at the bottom, never in the body.
 
 ## Research question
 Does `jev-1.13.0` keep (a) accuracy and (b) calibration on Russian inputs relative to English,
