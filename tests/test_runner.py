@@ -81,3 +81,31 @@ def test_budget_guard(tmp_path):
     cell = parse_cell("xnli-en", "en")
     with pytest.raises(BudgetExceeded):
         _run(cell, _items(60), [0], tmp_path / "x.jsonl", fake_transport(), budget=0.0000001)
+
+
+def test_auth_error_aborts_instead_of_filling_the_errors_file(tmp_path):
+    import httpx2
+    from jev_cyrillic_audit.run import FatalAPIError
+    t = httpx2.MockTransport(lambda req: httpx2.Response(401, json={"error": {"message": "bad key"}}))
+    cell = parse_cell("xnli-en", "en")
+    out = tmp_path / "x.jsonl"
+    with pytest.raises(FatalAPIError):
+        _run(cell, _items(50), [0], out, t)
+    assert not out.with_suffix(".errors.jsonl").exists() or out.with_suffix(".errors.jsonl").read_text() == ""
+
+
+def test_error_streak_trips_the_breaker(tmp_path):
+    import httpx2
+    from jev_cyrillic_audit.run import FatalAPIError, MAX_CONSECUTIVE_ERRORS
+    t = httpx2.MockTransport(lambda req: httpx2.Response(503, json={"error": {"message": "down"}}))
+    cell = parse_cell("xnli-en", "en")
+    out = tmp_path / "x.jsonl"
+
+    async def go():
+        async with AsyncTypeSafeClient(api_key="test", model=MODEL, transport=t, retry=__import__("typesafe_sdk").RetryPolicy(max_retries=0)) as client:
+            r = Runner(client, concurrency=4, rpm=6000, budget_usd=None, planned_calls=100)
+            await r.run_cell(cell, _items(100), [0], out)
+    with pytest.raises(FatalAPIError):
+        asyncio.run(go())
+    n_err = len(out.with_suffix(".errors.jsonl").read_text().splitlines())
+    assert MAX_CONSECUTIVE_ERRORS <= n_err < 100

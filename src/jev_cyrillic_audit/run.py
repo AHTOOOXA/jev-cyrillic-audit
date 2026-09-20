@@ -24,7 +24,15 @@ import pandas as pd
 from dotenv import load_dotenv
 
 import typesafe_sdk
-from typesafe_sdk import AsyncTypeSafeClient, RetryPolicy, TypeSafeError
+from typesafe_sdk import (
+    AsyncTypeSafeClient,
+    RetryPolicy,
+    TypeSafeAuthenticationError,
+    TypeSafeBadRequestError,
+    TypeSafeError,
+    TypeSafePermissionDeniedError,
+    TypeSafeUnprocessableEntityError,
+)
 
 from .data import DATASETS, N_PER_DATASET, REVISIONS, SEED, join_items
 from .questions import build_question, check_state, from_choice
@@ -47,6 +55,14 @@ class ModelDrift(RuntimeError):
 
 class BudgetExceeded(RuntimeError):
     pass
+
+
+class FatalAPIError(RuntimeError):
+    """An error that will not go away on retry: bad key, no permission, malformed request."""
+
+
+FATAL = (TypeSafeAuthenticationError, TypeSafePermissionDeniedError, TypeSafeBadRequestError, TypeSafeUnprocessableEntityError)
+MAX_CONSECUTIVE_ERRORS = 20
 
 
 def utc_now() -> str:
@@ -110,6 +126,7 @@ class Runner:
         self.tokens = 0
         self.latencies: list[float] = []
         self.errors = 0
+        self.consecutive_errors = 0
         self.abort: BaseException | None = None
 
     def projected_cost(self) -> float:
@@ -129,13 +146,20 @@ class Runner:
             t0 = time.perf_counter()
             try:
                 r = await self.client.system_one(state, {"q": question}, model=MODEL)
+            except FATAL as e:
+                self.abort = FatalAPIError(f"{type(e).__name__}: {e}")
+                return
             except TypeSafeError as e:
                 self.errors += 1
+                self.consecutive_errors += 1
                 err.write(json.dumps({"item_id": item["item_id"], "pass": p, "error": type(e).__name__,
                                       "message": str(e)[:500], "ts": utc_now()}, ensure_ascii=False) + "\n")
                 err.flush()
+                if self.consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+                    self.abort = FatalAPIError(f"{self.consecutive_errors} consecutive errors, last: {type(e).__name__}: {e}")
                 return
             latency_ms = (time.perf_counter() - t0) * 1000
+            self.consecutive_errors = 0
         if r.model != MODEL:
             self.abort = ModelDrift(f"response.model={r.model!r} != {MODEL!r} (request_id={r.request_id})")
             return
