@@ -1,0 +1,14 @@
+{
+  "dataset": "xnli",
+  "instr_lang": "en",
+  "state_schema": [
+    "premise",
+    "hypothesis"
+  ],
+  "instructions": "Given the premise, is the hypothesis true, undetermined, or false?",
+  "criteria": {
+    "entailment": "The premise makes the hypothesis true.",
+    "neutral": "The premise neither makes the hypothesis true nor false.",
+    "contradiction": "The premise makes the hypothesis false."
+  }
+}
