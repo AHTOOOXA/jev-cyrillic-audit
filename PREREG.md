@@ -10,6 +10,12 @@
 Does `jev-1.13.0` keep (a) accuracy and (b) calibration on Russian inputs relative to English,
 on the same human-labelled items?
 
+The claim under test is the vendor's own (docs.typesafe.ai/introduction/machine-learning-primer):
+*"Outcomes assigned a probability of 0.8 should occur about 80% of the time. Outcomes assigned a
+probability of 1.0 should occur 100% of the time."* — together with the language caveat on
+docs.typesafe.ai/models: *"English is the primary training language and where accuracy is
+currently best. Other languages … are handled but not equally well."*
+
 ## Model and access
 - `jev-1.13.0` (pinned; `response.model` asserted on every call; the run aborts on drift)
 - `typesafe-sdk==0.7.0`, Python 3.11, endpoint default (`console.typesafe.ai` key)
@@ -52,6 +58,13 @@ on the same human-labelled items?
   from wording space; stated as a limitation.
 - **Two passes** per cell (`pass ∈ {0, 1}`), pass 1 run after pass 0 has completed for all cells.
   **The headline uses pass 0.** Pass 1 is the stability check and is never averaged into the headline.
+- **Identical-request check (dry run, before freeze).** The vendor's consistency cookbooks add a
+  throwaway `uid` field to every call and state they "cannot separate sensitivity to the irrelevant
+  field from variation that would occur on identical requests"; whether the API caches identical
+  requests is undocumented. The `--scratch` dry run sends 20 items twice, byte-identical. If any
+  answer differs, passes are sent identical (`uid` off). If all 40 are bit-identical and pass-1
+  latency is markedly lower, pass 1 is sent with a `uid` field in the state and this is recorded
+  here before the freeze. Result: **TODO (fill from the dry run).**
 - Concurrency 8, client-side pacer ≤ 1,150 rpm, SDK retries honour `retry-after-ms`.
 - Per-row log: `item_id, dataset, lang, instr_lang, pass, gold, pred, choice, p_max, confidence,
   probs, input_tokens, latency_ms, model, request_id, ts`. **Never the source text.**
@@ -79,6 +92,8 @@ on the same human-labelled items?
   mean and max |Δp_max|, and the flip-rate difference RU−EN.
 - RU/EN input-token ratio per dataset from `usage.input_tokens` (same items, same prompt).
 - `confidence` vs `p_max`: Pearson r and the share of rows with `confidence > p_max`, per arm.
+- Accuracy and share of items in the `p_max == 1.0` bucket, per arm (the vendor's "1.0 → 100%").
+- Coverage and accuracy at the vendor's canonical gates `confidence ≥ 0.5` and `≥ 0.9`, per arm.
 
 ## Headline statistics (named before the run)
 Per dataset, on pass 0, EN instructions:

@@ -109,3 +109,24 @@ def test_error_streak_trips_the_breaker(tmp_path):
         asyncio.run(go())
     n_err = len(out.with_suffix(".errors.jsonl").read_text().splitlines())
     assert MAX_CONSECUTIVE_ERRORS <= n_err < 100
+
+
+def test_uid_field_only_on_requested_passes(tmp_path):
+    import httpx2
+    seen = []
+    def handler(req):
+        body = json.loads(req.content); seen.append(body["state"])
+        return httpx2.Response(200, headers={"x-typesafe-request-id": "r"}, json={
+            "model": MODEL, "usage": {"input_tokens": 1, "output_tokens": 0},
+            "answers": {"q": {"type": "choice", "choice": "neutral", "confidence": 0.5,
+                              "probabilities": {"entailment": 0.2, "neutral": 0.6, "contradiction": 0.2}}}})
+    cell = parse_cell("xnli-en", "en")
+    async def go():
+        async with AsyncTypeSafeClient(api_key="t", model=MODEL, transport=httpx2.MockTransport(handler)) as client:
+            r = Runner(client, concurrency=2, rpm=6000, budget_usd=None, planned_calls=4, uid_passes=(1,))
+            await r.run_cell(cell, _items(2), [0, 1], tmp_path / "x.jsonl")
+    asyncio.run(go())
+    with_uid = [s for s in seen if "uid" in s]
+    assert len(seen) == 4 and len(with_uid) == 2
+    assert all(list(s) == ["premise", "hypothesis", "uid"] for s in with_uid)
+    assert all(list(s) == ["premise", "hypothesis"] for s in seen if "uid" not in s)

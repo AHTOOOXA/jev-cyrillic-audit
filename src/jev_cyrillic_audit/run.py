@@ -17,6 +17,7 @@ import statistics
 import subprocess
 import sys
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -116,8 +117,9 @@ def done_pairs(path: Path) -> set[tuple[str, int]]:
 
 class Runner:
     def __init__(self, client: AsyncTypeSafeClient, *, concurrency: int, rpm: float, budget_usd: float | None,
-                 planned_calls: int) -> None:
+                 planned_calls: int, uid_passes: tuple[int, ...] = ()) -> None:
         self.client = client
+        self.uid_passes = uid_passes  # passes that get a throwaway `uid` field (cache buster), if any
         self.sem = asyncio.Semaphore(concurrency)
         self.pacer = Pacer(rpm)
         self.budget_usd = budget_usd
@@ -138,6 +140,8 @@ class Runner:
         if self.abort is not None:
             return
         state = check_state(cell["dataset"], cell["instr_lang"], dict(item[f"state_{cell['lang']}"]))
+        if p in self.uid_passes:
+            state = {**state, "uid": f"{p}:{item['item_id']}:{uuid.uuid4().hex[:8]}"}
         question = build_question(cell["dataset"], cell["instr_lang"])
         async with self.sem:
             if self.abort is not None:
@@ -201,7 +205,8 @@ def parse_cell(name: str, instr_lang: str) -> dict:
     return {"name": name, "dataset": dataset, "lang": lang, "instr_lang": instr_lang}
 
 
-def write_manifest(run_id: str, cells: list[dict], passes: int, n: int, frozen: dict, out_dir: Path) -> dict:
+def write_manifest(run_id: str, cells: list[dict], passes: int, n: int, frozen: dict, out_dir: Path,
+                   uid_passes: list[int] = ()) -> dict:
     files = sorted(out_dir.glob(f"{run_id}-*.jsonl"))
     rows = [json.loads(l) for f in files if not f.name.endswith(".errors.jsonl") for l in f.open(encoding="utf-8")]
     errs = sum(1 for f in files if f.name.endswith(".errors.jsonl") for _ in f.open(encoding="utf-8"))
@@ -222,6 +227,7 @@ def write_manifest(run_id: str, cells: list[dict], passes: int, n: int, frozen: 
     m = {
         "run_id": run_id, "model": MODEL, "sdk_version": typesafe_sdk.__version__, "python": sys.version.split()[0],
         "seed": SEED, "n_per_cell": n, "passes": passes, "instr_lang": cells[0]["instr_lang"],
+        "uid_passes": uid_passes,
         "concurrency_rpm_cap": None,
         "run_started_utc": min(r["ts"] for r in rows) if rows else None,
         "run_finished_utc": max(r["ts"] for r in rows) if rows else None,
@@ -264,11 +270,12 @@ async def main_async(a: argparse.Namespace) -> None:
           f"out={out_dir.relative_to(ROOT)}/ budget=${a.budget_usd}", flush=True)
     retry = RetryPolicy(max_retries=6, backoff_initial=1.0, backoff_max=20.0, timeout=180.0)
     async with AsyncTypeSafeClient(model=MODEL, retry=retry, timeout=60.0) as client:
-        runner = Runner(client, concurrency=a.concurrency, rpm=a.rpm, budget_usd=a.budget_usd, planned_calls=planned)
+        runner = Runner(client, concurrency=a.concurrency, rpm=a.rpm, budget_usd=a.budget_usd, planned_calls=planned,
+                        uid_passes=tuple(a.uid_passes))
         for p in range(a.passes):                      # all cells at pass 0, then all cells at pass 1
             for c in cells:
                 await runner.run_cell(c, per_dataset[c["dataset"]], [p], out_dir / f"{a.run_id}-{c['name']}.jsonl")
-    m = write_manifest(a.run_id, cells, a.passes, n, frozen, out_dir)
+    m = write_manifest(a.run_id, cells, a.passes, n, frozen, out_dir, list(a.uid_passes))
     m["concurrency_rpm_cap"] = [a.concurrency, a.rpm]
     (out_dir / "manifest.json").write_text(json.dumps(m, indent=2) + "\n")
     lat = sorted(runner.latencies)
@@ -297,6 +304,8 @@ def main() -> None:
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--rpm", type=float, default=1150.0)
     ap.add_argument("--budget-usd", type=float, default=1.0, help="abort if the projected run cost exceeds this")
+    ap.add_argument("--uid-passes", type=int, nargs="*", default=[],
+                    help="passes that get a throwaway `uid` state field (cache buster); decided by the dry run, see PREREG")
     a = ap.parse_args()
     if a.limit and not a.scratch:
         ap.error("--limit is for dry runs; add --scratch")

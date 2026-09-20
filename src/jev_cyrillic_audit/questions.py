@@ -24,10 +24,10 @@ def build_question(dataset: str, instr_lang: str) -> Choice:
 
 
 def check_state(dataset: str, instr_lang: str, state: dict) -> dict:
-    """The state dict must carry exactly the frozen keys, in the frozen order."""
+    """The state dict must carry exactly the frozen keys, in the frozen order; values as plain str."""
     keys = load_prompt(dataset, instr_lang)["state_schema"]
     assert list(state) == keys, (list(state), keys)
-    return state
+    return {k: str(v) for k, v in state.items()}
 
 
 def from_choice(ans) -> dict:
