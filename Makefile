@@ -1,3 +1,4 @@
+export HF_HOME ?= $(CURDIR)/hf_cache
 .PHONY: reproduce test freeze check-prereg
 
 reproduce:
