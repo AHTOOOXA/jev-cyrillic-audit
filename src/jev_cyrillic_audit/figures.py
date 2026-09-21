@@ -194,3 +194,74 @@ def neutral_drift_chart(res: dict, out: Path) -> None:
     fig.text(0.01, -0.03, f"Slope {b:+.2f} pp accuracy per pp of excess neutral. Filled = Latin script, hollow = other. Bars = paired 95% CI on Δaccuracy. github.com/AHTOOOXA/jev-cyrillic-audit", fontsize=8, color=INK3)
     fig.tight_layout(); fig.savefig(out, dpi=200, bbox_inches="tight"); plt.close(fig)
     print("figure:", out.name)
+
+
+# ---------- Study 3 ----------
+
+def mechanism_charts(res: dict, out_dir: Path) -> None:
+    r1, r2, r3 = res["h1_neutral_drift"], res["h2_binary_framing"], res["h3_sib200"]
+    langs = r1["languages"]; t = r1["test"]
+    # --- 1. fresh-item drift line, Study-2 points as a faint reference
+    fig, ax = plt.subplots(figsize=(6.6, 5.8))
+    ax.axhline(0, color=INK3, lw=1, ls="--", zorder=1); ax.axvline(0, color=INK3, lw=1, ls="--", zorder=1)
+    ref = ROOT / "results2.json"
+    if ref.exists():
+        s2 = json.loads(ref.read_text())["xnli_languages"]
+        ax.scatter([v["excess_neutral"] * 100 for v in s2.values()], [v["d_acc"]["delta"] * 100 for v in s2.values()],
+                   s=40, facecolor="none", edgecolor=INK3, linewidth=1, alpha=0.6, zorder=2, label="Study 2 (test items, exploratory)")
+    for l, r in langs.items():
+        x, y = r["excess_neutral"] * 100, r["d_acc"]["delta"] * 100
+        ax.errorbar([x], [y], yerr=[[y - r["d_acc"]["ci_low"] * 100], [r["d_acc"]["ci_high"] * 100 - y]], fmt="none", ecolor=C["en"], elinewidth=1.1, alpha=0.5, capsize=2, zorder=3)
+        ax.scatter([x], [y], s=64, facecolor=C["en"] if r["script"] == "latin" else "white", edgecolor=C["en"], linewidth=1.8, zorder=4)
+        ax.annotate(l, (x, y), textcoords="offset points", xytext=(6, 4), fontsize=9, color=INK)
+    ax.scatter([], [], s=64, color=C["en"], label="Study 3 (fresh validation items, pre-registered)")
+    ax.scatter([0], [0], s=64, color=INK3, zorder=4); ax.annotate("en", (0, 0), textcoords="offset points", xytext=(6, -12), fontsize=9, color=INK2)
+    xs = np.array([r["excess_neutral"] * 100 for r in langs.values()]); ys = np.array([r["d_acc"]["delta"] * 100 for r in langs.values()])
+    b, a = np.polyfit(xs, ys, 1); xx = np.linspace(0, xs.max() * 1.05, 2); ax.plot(xx, a + b * xx, color=INK3, lw=1, zorder=1)
+    ax.set_xlabel("excess `neutral` predictions vs English (pp of items)"); ax.set_ylabel("Δaccuracy vs English (pp)")
+    ax.grid(True, color=GRID, lw=0.6, zorder=0); ax.legend(loc="upper right", fontsize=8.5)
+    ax.set_title(f"ρ = {t['rho']:+.2f} [{t['rho_ci_items'][0]:+.2f}, {t['rho_ci_items'][1]:+.2f}], permutation p = {t['perm_p_one_sided']:.4f}; "
+                 f"{t['pooled_lost_to_neutral']:.0%} of lost items → neutral  → {t['verdict']}", fontsize=9.5, loc="left", color=INK)
+    fig.suptitle(f"Jev ({res['model']}) — neutral drift replicates on 600 fresh XNLI items\n14 languages vs English", fontsize=12, x=0.01, ha="left", color=INK)
+    fig.text(0.01, -0.03, f"Slope {b:+.2f} pp per pp. Filled = Latin script, hollow = other. Bars = paired 95% CI. github.com/AHTOOOXA/jev-cyrillic-audit", fontsize=8, color=INK3)
+    fig.tight_layout(); fig.savefig(out_dir / "mechanism_fresh_drift.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+
+    # --- 2. recovery: recall on gold-entailment items, 3-way vs binary, EN vs L
+    L = list(r2["languages"]); n = len(L); w = 0.2; xi = np.arange(n)
+    fig, ax = plt.subplots(figsize=(10, 4.8))
+    series = [("3-way · English", [r2["languages"][l]["recall_ent_3way"]["en"] for l in L], INK3, 1.0),
+              ("3-way · language", [r2["languages"][l]["recall_ent_3way"]["lang"] for l in L], C["en"], 1.0),
+              ("binary · English", [r2["languages"][l]["recall_ent_binary"]["en"] for l in L], INK3, 0.45),
+              ("binary · language", [r2["languages"][l]["recall_ent_binary"]["lang"] for l in L], C["ru"], 1.0)]
+    for j, (lab, vals, col, alpha) in enumerate(series):
+        ax.bar(xi + (j - 1.5) * w, vals, width=w - 0.02, color=col, alpha=alpha, label=lab, zorder=3)
+    for i, l in enumerate(L):
+        r = r2["languages"][l]
+        txt = "n/a" if r["recovery"] is None else f"recovery {r['recovery']:+.0%}"
+        ax.text(i, 1.02, txt, ha="center", fontsize=8.5, color=INK)
+    ax.set_xticks(xi); ax.set_xticklabels(L); ax.set_ylim(0, 1.1); ax.set_yticks(np.arange(0, 1.01, 0.2))
+    ax.set_ylabel("recall on gold-entailment items (n=200)"); ax.grid(True, axis="y", color=GRID, lw=0.6, zorder=0)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), fontsize=8.5, ncol=4)
+    ci = r2["mean_recovery_ci_items"]
+    ax.set_title(f"Mean recovery of the entailment gap when `neutral` is removed: {r2['mean_recovery']:+.0%} [{ci[0]:+.0%}, {ci[1]:+.0%}]  → {r2['verdict']}", fontsize=10, loc="left", color=INK)
+    fig.suptitle(f"Jev ({res['model']}) — does the loss survive without an \"undetermined\" option?", fontsize=12, x=0.01, ha="left", color=INK)
+    fig.text(0.01, -0.09, "Same 600 fresh items asked two ways: 3-way (entailment / neutral / contradiction) and binary (entailment / not). github.com/AHTOOOXA/jev-cyrillic-audit", fontsize=8, color=INK3)
+    fig.tight_layout(); fig.savefig(out_dir / "mechanism_recovery.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+
+    # --- 3. tasks: dacc per language, XNLI-fresh vs SIB-200
+    order = sorted(langs, key=lambda l: langs[l]["d_acc"]["delta"])
+    fig, ax = plt.subplots(figsize=(9, 5.2)); yi = np.arange(len(order))
+    for i, l in enumerate(order):
+        for key, src, col, mk in (("XNLI (inference)", r1["languages"][l], C["en"], "o"), ("SIB-200 (topic selection)", r3["languages"][l], C["ru"], "D")):
+            d = src["d_acc"]; y = i + (0.12 if mk == "D" else -0.12)
+            ax.plot([d["ci_low"] * 100, d["ci_high"] * 100], [y, y], color=col, lw=1.2, alpha=0.5, zorder=2)
+            ax.scatter([d["delta"] * 100], [y], s=48, color=col, marker=mk, edgecolor="white", linewidth=0.8, zorder=4, label=key if i == 0 else None)
+    ax.axvline(0, color=INK3, lw=1, ls="--", zorder=1)
+    ax.set_yticks(yi); ax.set_yticklabels(order); ax.invert_yaxis()
+    ax.set_xlabel("Δaccuracy vs English (pp), paired 95% CI"); ax.grid(True, axis="x", color=GRID, lw=0.6, zorder=0)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), fontsize=9, ncol=2)
+    ax.set_title(f"median Δacc: XNLI {r3['median_d_acc_xnli_fresh']*100:+.1f} pp vs SIB-200 {r3['median_d_acc_sib200']*100:+.1f} pp  → {r3['verdict']}", fontsize=10, loc="left", color=INK)
+    fig.suptitle(f"Jev ({res['model']}) — the same 14 languages on an inference task and a selection task", fontsize=12, x=0.01, ha="left", color=INK)
+    fig.text(0.01, -0.08, "XNLI: 600 fresh items (3-way). SIB-200: 204 parallel sentences, 7 topics. github.com/AHTOOOXA/jev-cyrillic-audit", fontsize=8, color=INK3)
+    fig.tight_layout(); fig.savefig(out_dir / "mechanism_tasks.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+    print("figures:", "mechanism_fresh_drift.png mechanism_recovery.png mechanism_tasks.png")
