@@ -18,9 +18,15 @@ def load_prompt(dataset: str, instr_lang: str) -> dict:
     return p
 
 
-def build_question(dataset: str, instr_lang: str) -> Choice:
+def build_question(dataset: str, instr_lang: str, criteria: dict | None = None) -> Choice:
+    """Frozen instructions; frozen criteria, or per-item criteria (Belebele: the item's four answers
+    under the frozen keys A-D) when the prompt file declares placeholders."""
     p = load_prompt(dataset, instr_lang)
-    return Choice(instructions=p["instructions"], criteria=p["criteria"])
+    if criteria is None:
+        assert "criteria_note" not in p, f"{dataset} needs per-item criteria"
+        return Choice(instructions=p["instructions"], criteria=p["criteria"])
+    assert list(criteria) == list(p["criteria"]), (list(criteria), list(p["criteria"]))
+    return Choice(instructions=p["instructions"], criteria={k: str(v) for k, v in criteria.items()})
 
 
 def check_state(dataset: str, instr_lang: str, state: dict) -> dict:

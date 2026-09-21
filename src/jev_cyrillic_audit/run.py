@@ -43,7 +43,11 @@ PRICE_PER_MTOK_USD = 0.042
 ROOT = Path(__file__).resolve().parents[2]
 RUNS = ROOT / "runs"
 SCRATCH = ROOT / "scratch"
-CELLS = ("xnli-en", "xnli-ru", "massive-en", "massive-ru")
+CELLS = ("xnli-en", "xnli-ru", "massive-en", "massive-ru")                       # study 1
+XNLI_LANGS = ("ar", "bg", "de", "el", "en", "es", "fr", "hi", "ru", "sw", "th", "tr", "ur", "vi", "zh")
+CELLS2 = tuple(f"xnli-{l}" for l in XNLI_LANGS) + ("belebele-en", "belebele-ru")   # study 2 (Panorama)
+STUDIES = {1: {"cells": CELLS, "prereg": "PREREG.md", "items": "data/items.parquet"},
+           2: {"cells": CELLS2, "prereg": "PREREG-2.md", "items": "data/items2.parquet"}}
 ROW_FIELDS = (
     "item_id", "dataset", "lang", "instr_lang", "pass", "gold", "pred", "choice", "p_max", "confidence",
     "probs", "input_tokens", "latency_ms", "model", "request_id", "ts",
@@ -74,19 +78,21 @@ def sha256_file(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
-def check_frozen() -> dict:
-    """PREREG.md and prompts/*.json must match their committed SHA-256 files and be clean in git."""
+def check_frozen(prereg: str, items: str) -> dict:
+    """The study's PREREG, its items file and prompts/*.json must match the committed SHA-256 files and be clean in git."""
     out = subprocess.run(["shasum", "-a", "256", "-c", "PREREG.sha256"], cwd=ROOT, capture_output=True, text=True)
     assert out.returncode == 0, f"PREREG.sha256 does not verify:\n{out.stdout}{out.stderr}"
     out = subprocess.run(["shasum", "-a", "256", "-c", "prompts.sha256"], cwd=ROOT / "prompts", capture_output=True, text=True)
     assert out.returncode == 0, f"prompts.sha256 does not verify:\n{out.stdout}{out.stderr}"
-    paths = ["PREREG.md", "PREREG.sha256", "prompts", "data/items.parquet"]
+    prereg_hashes = {l.split()[1]: l.split()[0] for l in (ROOT / "PREREG.sha256").read_text().splitlines() if l.strip()}
+    assert prereg in prereg_hashes, f"{prereg} is not listed in PREREG.sha256 — run `make freeze`"
+    paths = [prereg, "PREREG.sha256", "prompts", items]
     dirty = subprocess.run(["git", "status", "--porcelain", "--", *paths], cwd=ROOT, capture_output=True, text=True).stdout
     assert not dirty.strip(), f"frozen files are modified or untracked in git:\n{dirty}"
     tracked = subprocess.run(["git", "ls-files", "--", *paths], cwd=ROOT, capture_output=True, text=True).stdout.split()
-    assert {"PREREG.md", "PREREG.sha256", "prompts/prompts.sha256"} <= set(tracked), "freeze files are not committed"
+    assert {prereg, "PREREG.sha256", "prompts/prompts.sha256", items} <= set(tracked), "freeze files are not committed"
     return {
-        "prereg_sha256": (ROOT / "PREREG.sha256").read_text().split()[0],
+        "prereg_file": prereg, "prereg_sha256": prereg_hashes[prereg],
         "prompts_sha256": {l.split()[1]: l.split()[0] for l in (ROOT / "prompts/prompts.sha256").read_text().splitlines() if l.strip()},
     }
 
@@ -139,10 +145,11 @@ class Runner:
     async def one(self, cell: dict, item: pd.Series, p: int, out, err) -> None:
         if self.abort is not None:
             return
-        state = check_state(cell["dataset"], cell["instr_lang"], dict(item[f"state_{cell['lang']}"]))
+        state = check_state(cell["dataset"], cell["instr_lang"], dict(item["state"]))
         if p in self.uid_passes:
             state = {**state, "uid": f"{p}:{item['item_id']}:{uuid.uuid4().hex[:8]}"}
-        question = build_question(cell["dataset"], cell["instr_lang"])
+        criteria = item["criteria"] if "criteria" in item and item["criteria"] is not None else None
+        question = build_question(cell["dataset"], cell["instr_lang"], criteria)
         async with self.sem:
             if self.abort is not None:
                 return
@@ -201,12 +208,24 @@ class Runner:
 
 def parse_cell(name: str, instr_lang: str) -> dict:
     dataset, lang = name.split("-")
-    assert dataset in DATASETS and lang in ("en", "ru"), name
+    assert name in CELLS or name in CELLS2, name
     return {"name": name, "dataset": dataset, "lang": lang, "instr_lang": instr_lang}
 
 
-def write_manifest(run_id: str, cells: list[dict], passes: int, n: int, frozen: dict, out_dir: Path,
-                   uid_passes: list[int] = ()) -> dict:
+def cell_frame(study: int, items: pd.DataFrame, cell: dict, limit: int | None) -> pd.DataFrame:
+    """Columns item_id, gold, state, criteria for one cell, from the study's frozen items file."""
+    if study == 1:
+        df = join_items(items, cell["dataset"])
+        out = pd.DataFrame({"item_id": df["item_id"], "gold": df["gold"], "state": df[f"state_{cell['lang']}"], "criteria": None})
+    else:
+        from .data import join_items2
+        df = join_items2(items, cell["dataset"], cell["lang"])
+        out = df[["item_id", "gold", "state", "criteria"]].reset_index(drop=True)
+    return out.head(limit) if limit else out
+
+
+def write_manifest(run_id: str, cells: list[dict], passes: int, n_per_cell: dict[str, int], frozen: dict, out_dir: Path,
+                   uid_passes: list[int] = (), study: int = 1) -> dict:
     files = sorted(out_dir.glob(f"{run_id}-*.jsonl"))
     rows = [json.loads(l) for f in files if not f.name.endswith(".errors.jsonl") for l in f.open(encoding="utf-8")]
     errs = sum(1 for f in files if f.name.endswith(".errors.jsonl") for _ in f.open(encoding="utf-8"))
@@ -216,7 +235,7 @@ def write_manifest(run_id: str, cells: list[dict], passes: int, n: int, frozen: 
         lat = sorted(r["latency_ms"] for r in rs)
         per_cell[c["name"]] = {
             "file": f"{run_id}-{c['name']}.jsonl", "rows": len(rs),
-            "expected_rows": n * passes,
+            "expected_rows": n_per_cell[c["name"]] * passes,
             "input_tokens": sum(r["input_tokens"] or 0 for r in rs),
             "mean_input_tokens": round(statistics.mean(r["input_tokens"] for r in rs), 1) if rs else None,
             "latency_p50_ms": lat[len(lat) // 2] if lat else None,
@@ -225,15 +244,15 @@ def write_manifest(run_id: str, cells: list[dict], passes: int, n: int, frozen: 
         }
     total_tokens = sum(r["input_tokens"] or 0 for r in rows)
     m = {
-        "run_id": run_id, "model": MODEL, "sdk_version": typesafe_sdk.__version__, "python": sys.version.split()[0],
-        "seed": SEED, "n_per_cell": n, "passes": passes, "instr_lang": cells[0]["instr_lang"],
+        "run_id": run_id, "study": study, "model": MODEL, "sdk_version": typesafe_sdk.__version__, "python": sys.version.split()[0],
+        "seed": SEED, "n_per_cell": n_per_cell, "passes": passes, "instr_lang": cells[0]["instr_lang"],
         "uid_passes": uid_passes,
         "concurrency_rpm_cap": None,
         "run_started_utc": min(r["ts"] for r in rows) if rows else None,
         "run_finished_utc": max(r["ts"] for r in rows) if rows else None,
         "total_calls": len(rows), "total_errors_logged": errs, "total_input_tokens": total_tokens,
         "total_cost_usd": round(total_tokens * PRICE_PER_MTOK_USD / 1e6, 4),
-        "dataset_revisions": REVISIONS, "items_parquet_sha256": sha256_file(ROOT / "data/items.parquet"),
+        "dataset_revisions": REVISIONS, "items_parquet_sha256": sha256_file(ROOT / STUDIES[study]["items"]),
         **frozen, "cells": per_cell,
     }
     (out_dir / "manifest.json").write_text(json.dumps(m, indent=2) + "\n")
@@ -258,24 +277,26 @@ async def main_async(a: argparse.Namespace) -> None:
     if a.smoke:
         await smoke()
         return
-    cells = [parse_cell(c, a.instr_lang) for c in a.cells]
-    out_dir = SCRATCH if a.scratch else RUNS
-    out_dir.mkdir(exist_ok=True)
-    frozen = {"prereg_sha256": None, "prompts_sha256": None} if a.scratch else check_frozen()
-    items = pd.read_parquet(ROOT / "data/items.parquet")
-    n = a.limit or N_PER_DATASET
-    per_dataset = {ds: join_items(items, ds).head(n) for ds in sorted({c["dataset"] for c in cells})}
-    planned = len(cells) * n * a.passes
-    print(f"run_id={a.run_id} cells={[c['name'] for c in cells]} n={n} passes={a.passes} planned_calls={planned} "
-          f"out={out_dir.relative_to(ROOT)}/ budget=${a.budget_usd}", flush=True)
+    study = STUDIES[a.study]
+    cells = [parse_cell(c, a.instr_lang) for c in (a.cells or study["cells"])]
+    out_dir = (SCRATCH if a.scratch else RUNS) / (f"study{a.study}" if a.study != 1 else "")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    frozen = {"prereg_file": study["prereg"], "prereg_sha256": None, "prompts_sha256": None} if a.scratch \
+        else check_frozen(study["prereg"], study["items"])
+    items = pd.read_parquet(ROOT / study["items"])
+    frames = {c["name"]: cell_frame(a.study, items, c, a.limit) for c in cells}
+    n_per_cell = {k: len(v) for k, v in frames.items()}
+    planned = sum(n_per_cell.values()) * a.passes
+    print(f"run_id={a.run_id} study={a.study} cells={[c['name'] for c in cells]} n_per_cell={sorted(set(n_per_cell.values()))} "
+          f"passes={a.passes} planned_calls={planned} out={out_dir.relative_to(ROOT)}/ budget=${a.budget_usd}", flush=True)
     retry = RetryPolicy(max_retries=6, backoff_initial=1.0, backoff_max=20.0, timeout=180.0)
     async with AsyncTypeSafeClient(model=MODEL, retry=retry, timeout=60.0) as client:
         runner = Runner(client, concurrency=a.concurrency, rpm=a.rpm, budget_usd=a.budget_usd, planned_calls=planned,
                         uid_passes=tuple(a.uid_passes))
         for p in range(a.passes):                      # all cells at pass 0, then all cells at pass 1
             for c in cells:
-                await runner.run_cell(c, per_dataset[c["dataset"]], [p], out_dir / f"{a.run_id}-{c['name']}.jsonl")
-    m = write_manifest(a.run_id, cells, a.passes, n, frozen, out_dir, list(a.uid_passes))
+                await runner.run_cell(c, frames[c["name"]], [p], out_dir / f"{a.run_id}-{c['name']}.jsonl")
+    m = write_manifest(a.run_id, cells, a.passes, n_per_cell, frozen, out_dir, list(a.uid_passes), a.study)
     m["concurrency_rpm_cap"] = [a.concurrency, a.rpm]
     (out_dir / "manifest.json").write_text(json.dumps(m, indent=2) + "\n")
     lat = sorted(runner.latencies)
@@ -283,9 +304,9 @@ async def main_async(a: argparse.Namespace) -> None:
           f"p50={lat[len(lat)//2]:.0f}ms" if lat else "\nthis invocation: nothing to do")
     print(f"manifest: rows={m['total_calls']} tokens={m['total_input_tokens']} cost=${m['total_cost_usd']:.4f} "
           f"models={sorted({mm for c in m['cells'].values() for mm in c['models']})}")
-    if runner.calls:
-        full = 2 * N_PER_DATASET * len(CELLS)
-        print(f"projection at {full} calls (MVP): ${runner.tokens / runner.calls * full * PRICE_PER_MTOK_USD / 1e6:.3f}")
+    if runner.calls and a.limit:
+        full_items = sum(len(cell_frame(a.study, items, c, None)) for c in cells) * a.passes
+        print(f"projection at {full_items} calls (full study {a.study}): ${runner.tokens / runner.calls * full_items * PRICE_PER_MTOK_USD / 1e6:.3f}")
     short = {k: v for k, v in m["cells"].items() if v["rows"] != v["expected_rows"]}
     if short:
         print(f"INCOMPLETE cells (re-run with the same --run-id to resume): {short}")
@@ -295,7 +316,8 @@ async def main_async(a: argparse.Namespace) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--smoke", action="store_true", help="one call, print and assert the model id")
-    ap.add_argument("--cells", nargs="+", default=list(CELLS), choices=CELLS)
+    ap.add_argument("--study", type=int, default=1, choices=(1, 2), help="1 = RU vs EN MVP; 2 = Panorama (XNLI x15 + Belebele)")
+    ap.add_argument("--cells", nargs="+", default=None, choices=tuple(dict.fromkeys(CELLS + CELLS2)), help="default: all cells of the study")
     ap.add_argument("--instr-lang", default="en", choices=("en", "ru"))
     ap.add_argument("--passes", type=int, default=2)
     ap.add_argument("--limit", type=int, default=None, help="first N items per dataset (dry runs)")

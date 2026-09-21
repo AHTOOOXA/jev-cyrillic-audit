@@ -9,13 +9,15 @@ from jev_cyrillic_audit.run import MODEL, ROW_FIELDS, ModelDrift, Runner, done_p
 from tests.conftest import fake_transport
 
 
-def _items(n: int, dataset: str = "xnli") -> pd.DataFrame:
+def _items(n: int, lang: str = "en") -> pd.DataFrame:
+    """A cell frame as `cell_frame()` produces it: item_id, gold, state, criteria."""
+    ru = lang == "ru"
     return pd.DataFrame(
         {
             "item_id": [str(i) for i in range(n)],
             "gold": ["neutral"] * n,
-            "state_en": [{"premise": f"p{i}", "hypothesis": f"h{i}"} for i in range(n)],
-            "state_ru": [{"premise": f"п{i}", "hypothesis": f"г{i}"} for i in range(n)],
+            "state": [{"premise": f"{'п' if ru else 'p'}{i}", "hypothesis": f"{'г' if ru else 'h'}{i}"} for i in range(n)],
+            "criteria": [None] * n,
         }
     )
 
@@ -32,7 +34,7 @@ def _run(cell, items, passes, out_path, transport, **kw):
 def test_rows_have_exact_schema_and_no_text(tmp_path):
     cell = parse_cell("xnli-ru", "en")
     out = tmp_path / "x.jsonl"
-    r = _run(cell, _items(5), [0], out, fake_transport())
+    r = _run(cell, _items(5, "ru"), [0], out, fake_transport())
     rows = [json.loads(l) for l in out.read_text().splitlines()]
     assert len(rows) == 5 and r.calls == 5
     for row in rows:
@@ -58,7 +60,7 @@ def test_resume_skips_done_pairs_and_completes_pass_1(tmp_path):
 def test_failed_calls_go_to_errors_file_and_are_retried_on_resume(tmp_path):
     cell = parse_cell("massive-en", "en")
     items = pd.DataFrame({"item_id": ["1", "2", "3"], "gold": ["a"] * 3,
-                          "state_en": [{"utterance": f"u{i}"} for i in (1, 2, 3)], "state_ru": [{"utterance": f"у{i}"} for i in (1, 2, 3)]})
+                          "state": [{"utterance": f"u{i}"} for i in (1, 2, 3)], "criteria": [None] * 3})
     out = tmp_path / "m.jsonl"
     r = _run(cell, items, [0], out, fake_transport(fail_ids={"u2"}))
     assert r.calls == 2 and r.errors == 1
@@ -130,3 +132,28 @@ def test_uid_field_only_on_requested_passes(tmp_path):
     assert len(seen) == 4 and len(with_uid) == 2
     assert all(list(s) == ["premise", "hypothesis", "uid"] for s in with_uid)
     assert all(list(s) == ["premise", "hypothesis"] for s in seen if "uid" not in s)
+
+
+def test_belebele_cell_uses_per_item_criteria(tmp_path):
+    import httpx2
+    seen = []
+    def handler(req):
+        body = json.loads(req.content); seen.append(body)
+        return httpx2.Response(200, headers={"x-typesafe-request-id": "r"}, json={
+            "model": MODEL, "usage": {"input_tokens": 1, "output_tokens": 0},
+            "answers": {"q": {"type": "choice", "choice": "B", "confidence": 0.5,
+                              "probabilities": {"A": 0.1, "B": 0.6, "C": 0.2, "D": 0.1}}}})
+    items = pd.DataFrame({"item_id": ["l#1", "l#2"], "gold": ["B", "C"],
+                          "state": [{"passage": "P", "question": "Q"}] * 2,
+                          "criteria": [{"A": "a1", "B": "b1", "C": "c1", "D": "d1"}, {"A": "a2", "B": "b2", "C": "c2", "D": "d2"}]})
+    cell = parse_cell("belebele-en", "en")
+    async def go():
+        async with AsyncTypeSafeClient(api_key="t", model=MODEL, transport=httpx2.MockTransport(handler)) as client:
+            r = Runner(client, concurrency=2, rpm=6000, budget_usd=None, planned_calls=2)
+            await r.run_cell(cell, items, [0], tmp_path / "b.jsonl")
+    asyncio.run(go())
+    crit = sorted(json.dumps(b["questions"]["q"]["criteria"], sort_keys=True) for b in seen)
+    assert crit == ['{"A": "a1", "B": "b1", "C": "c1", "D": "d1"}', '{"A": "a2", "B": "b2", "C": "c2", "D": "d2"}']
+    assert all(list(b["state"]) == ["passage", "question"] for b in seen)
+    rows = [json.loads(l) for l in (tmp_path / "b.jsonl").read_text().splitlines()]
+    assert {r["gold"] for r in rows} == {"B", "C"} and all(r["dataset"] == "belebele" for r in rows)

@@ -1,0 +1,16 @@
+{
+  "dataset": "belebele",
+  "instr_lang": "en",
+  "state_schema": [
+    "passage",
+    "question"
+  ],
+  "instructions": "Which option correctly answers `question` according to `passage`?",
+  "criteria": {
+    "A": "<mc_answer1 of the item>",
+    "B": "<mc_answer2 of the item>",
+    "C": "<mc_answer3 of the item>",
+    "D": "<mc_answer4 of the item>"
+  },
+  "criteria_note": "Per item: the four answer texts of the item, in the item's language, under fixed keys A-D; the placeholders above are replaced at call time."
+}

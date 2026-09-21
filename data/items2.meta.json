@@ -1,0 +1,194 @@
+{
+  "items_parquet": "data/items.parquet",
+  "items_parquet_sha256": "c5e3ea068a2b3a03ffa703c19773a5108bd49f84b1f1209c728a2185668e43a4",
+  "datasets": {
+    "xnli": {
+      "repo": "facebook/xnli",
+      "revision": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
+      "split": "test",
+      "n_source": 5010,
+      "n_frozen_ids": 600,
+      "langs": [
+        "ar",
+        "bg",
+        "de",
+        "el",
+        "en",
+        "es",
+        "fr",
+        "hi",
+        "ru",
+        "sw",
+        "th",
+        "tr",
+        "ur",
+        "vi",
+        "zh"
+      ],
+      "per_lang": {
+        "ar": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 1.0
+        },
+        "bg": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 1.0
+        },
+        "de": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "el": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 1.0
+        },
+        "en": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "es": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "fr": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "hi": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 0.9998003992015968
+        },
+        "ru": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [
+            2805,
+            2806
+          ],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 1.0
+        },
+        "sw": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "th": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 1.0
+        },
+        "tr": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "ur": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 0.9972055888223553
+        },
+        "vi": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": false,
+          "script_share": null
+        },
+        "zh": {
+          "n_rows": 600,
+          "n_missing_from_sample": 0,
+          "misaligned_rows_full": [],
+          "misaligned_rows_in_sample": [],
+          "script_checked": true,
+          "script_share": 1.0
+        }
+      }
+    },
+    "belebele": {
+      "repo": "facebook/belebele",
+      "revision": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2",
+      "split": "test",
+      "n_source": 900,
+      "configs": {
+        "en": "eng_Latn",
+        "ru": "rus_Cyrl"
+      },
+      "per_lang": {
+        "en": {
+          "n_rows": 900,
+          "script_checked": false,
+          "script_share": null,
+          "gold_counts": {
+            "A": 206,
+            "B": 251,
+            "C": 246,
+            "D": 197
+          }
+        },
+        "ru": {
+          "n_rows": 900,
+          "script_checked": true,
+          "script_share": 1.0,
+          "gold_counts": {
+            "A": 206,
+            "B": 251,
+            "C": 246,
+            "D": 197
+          }
+        }
+      },
+      "checks": {
+        "en_ru_id_sets_equal": true,
+        "n_items": 900,
+        "gold_identical_en_ru": true
+      }
+    }
+  }
+}

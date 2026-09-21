@@ -15,5 +15,20 @@
     },
     "model": "jev-1.13.0",
     "request_id": "req_01a0be3fb4817b1fac3164d211e8173f"
+  },
+  "belebele": {
+    "input_tokens_with_minimal_state": 354,
+    "minimal_state": {
+      "passage": ".",
+      "question": "."
+    },
+    "minimal_criteria": {
+      "A": ".",
+      "B": ".",
+      "C": ".",
+      "D": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0c3f8f0267abf82f0a24d52c34465"
   }
 }

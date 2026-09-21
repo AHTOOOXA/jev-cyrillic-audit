@@ -123,3 +123,48 @@ def make_figures(res: dict, out_dir: Path, runs_dir: Path = ROOT / "runs") -> No
 
 if __name__ == "__main__":
     make_figures(json.loads((ROOT / "results.json").read_text()), ROOT / "figures")
+
+
+# ---------- Study 2 ----------
+
+def panorama_chart(res: dict, out: Path) -> None:
+    """dECE(L) and dacc(L) vs the state-token ratio r(L), one point per XNLI language; Belebele-ru as a diamond."""
+    langs = res["xnli_languages"]; t = res["tests"]; b = res["belebele"]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5.4))
+    panels = (("d_ece", "ΔECE vs English (same items)", t["rq1_ece_vs_tokens"], 1.0),
+              ("d_acc", "Δaccuracy vs English (pp)", t["rq2_acc_vs_tokens"], 100.0))
+    for ax, (key, ylabel, test, scale) in zip(axes, panels):
+        ax.axhline(0, color=INK3, lw=1, ls="--", zorder=1)
+        ax.axvline(1, color=GRID, lw=1, zorder=0)
+        xs, ys = [], []
+        for l, r in sorted(langs.items(), key=lambda kv: kv[1]["tokens"]["state_only_ratio"]):
+            x = r["tokens"]["state_only_ratio"]; d = r[key]
+            y, lo, hi = d["delta"] * scale, d["ci_low"] * scale, d["ci_high"] * scale
+            latin = r["script"] == "latin"
+            ax.errorbar([x], [y], yerr=[[y - lo], [hi - y]], fmt="none", ecolor=C["en"], elinewidth=1.2, alpha=0.6, capsize=2, zorder=2)
+            ax.scatter([x], [y], s=64, facecolor=C["en"] if latin else "white", edgecolor=C["en"], linewidth=1.8, zorder=4)
+            ax.annotate(l, (x, y), textcoords="offset points", xytext=(6, 5), fontsize=9, color=INK)
+            xs.append(x); ys.append(y)
+        # English reference and Belebele-ru
+        ax.scatter([1.0], [0.0], s=64, color=INK3, zorder=4); ax.annotate("en", (1.0, 0.0), textcoords="offset points", xytext=(6, -12), fontsize=9, color=INK2)
+        bx, bd = b["tokens"]["state_only_ratio"], b[key]
+        by = bd["delta"] * scale
+        ax.errorbar([bx], [by], yerr=[[by - bd["ci_low"] * scale], [bd["ci_high"] * scale - by]], fmt="none", ecolor=C["ru"], elinewidth=1.2, alpha=0.7, capsize=2, zorder=2)
+        ax.scatter([bx], [by], s=80, marker="D", color=C["ru"], edgecolor="white", linewidth=1.2, zorder=5)
+        ax.annotate("ru · Belebele", (bx, by), textcoords="offset points", xytext=(6, -12), fontsize=9, color=C["ru"])
+        ax.set_xscale("log")
+        ticks = [1, 1.5, 2, 3, 4, 6, 8]
+        ax.set_xticks(ticks); ax.set_xticklabels([f"{v:g}×" for v in ticks]); ax.minorticks_off()
+        ax.set_xlabel("state tokens relative to English (same text)")
+        ax.set_ylabel(ylabel)
+        ax.grid(True, color=GRID, lw=0.6, zorder=0)
+        ax.set_title(f"Spearman ρ = {test['rho']:+.2f}  [{test['rho_ci_items'][0]:+.2f}, {test['rho_ci_items'][1]:+.2f}]   "
+                     f"permutation p = {test['perm_p_one_sided']:.3f}   → {test['verdict']}", fontsize=10.5, loc="left", color=INK)
+    fig.suptitle(f"Jev ({res['model']}) — does the tokenization cost of a language predict its calibration loss?  "
+                 f"XNLI, 14 languages vs English, same 600 items", fontsize=12.5, x=0.01, ha="left", color=INK)
+    fig.text(0.01, -0.02, "Filled = Latin script, hollow = other scripts (pre-declared covariate). Bars = paired 95% bootstrap CI. "
+             "Belebele (900 long passages, EN vs RU) shown for the task-length comparison. github.com/AHTOOOXA/jev-cyrillic-audit", fontsize=8, color=INK3)
+    fig.tight_layout()
+    fig.savefig(out, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print("figure:", out.name)
