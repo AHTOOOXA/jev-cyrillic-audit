@@ -1,0 +1,539 @@
+{
+  "run_id": "20260921T152323Z",
+  "study": 3,
+  "model": "jev-1.13.0",
+  "sdk_version": "0.7.0",
+  "python": "3.11.16",
+  "seed": 20260919,
+  "n_per_cell": {
+    "xnli_fresh-ar": 600,
+    "xnli_fresh-bg": 600,
+    "xnli_fresh-de": 600,
+    "xnli_fresh-el": 600,
+    "xnli_fresh-en": 600,
+    "xnli_fresh-es": 600,
+    "xnli_fresh-fr": 600,
+    "xnli_fresh-hi": 600,
+    "xnli_fresh-ru": 600,
+    "xnli_fresh-sw": 600,
+    "xnli_fresh-th": 600,
+    "xnli_fresh-tr": 600,
+    "xnli_fresh-ur": 600,
+    "xnli_fresh-vi": 600,
+    "xnli_fresh-zh": 600,
+    "xnli_bin_ent-en": 600,
+    "xnli_bin_ent-ru": 600,
+    "xnli_bin_ent-sw": 600,
+    "xnli_bin_ent-de": 600,
+    "xnli_bin_ent-th": 600,
+    "xnli_bin_ent-bg": 600,
+    "xnli_bin_con-en": 600,
+    "xnli_bin_con-ru": 600,
+    "sib200-ar": 204,
+    "sib200-bg": 204,
+    "sib200-de": 204,
+    "sib200-el": 204,
+    "sib200-en": 204,
+    "sib200-es": 204,
+    "sib200-fr": 204,
+    "sib200-hi": 204,
+    "sib200-ru": 204,
+    "sib200-sw": 204,
+    "sib200-th": 204,
+    "sib200-tr": 204,
+    "sib200-ur": 204,
+    "sib200-vi": 204,
+    "sib200-zh": 204
+  },
+  "passes": 2,
+  "instr_lang": "en",
+  "uid_passes": [],
+  "concurrency_rpm_cap": [
+    8,
+    1150.0
+  ],
+  "run_started_utc": "2026-09-21T15:24:35.079Z",
+  "run_finished_utc": "2026-09-21T15:55:13.242Z",
+  "total_calls": 33720,
+  "total_errors_logged": 0,
+  "total_input_tokens": 15638976,
+  "total_cost_usd": 0.6568,
+  "dataset_revisions": {
+    "facebook/xnli": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
+    "mteb/amazon_massive_intent": "940fd47a81eaa7f2cc7b129674d945d618ac38c2",
+    "facebook/belebele": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2",
+    "Davlan/sib200": "38977a667f6fc264d5c26ec57a01e16db040b358"
+  },
+  "items_parquet_sha256": "1e667eb5adb25f487f6d5f4e1ebf2c511acbf398979657c408d01bbd2c2a5290",
+  "prereg_file": "PREREG-3.md",
+  "prereg_sha256": "3761a0ee107c28e9be6789e485c84eea1242d4782864f82ed572326fe1d36284",
+  "prompts_sha256": {
+    "belebele.en.json": "8d6d05018814723046ea715c4f5bb2a90bf1d588145d5c6d3d3420465b40cd1c",
+    "belebele.ru.json": "aeb5c01fd220c1b4f330b96c7581ca18d880a0f44188340c59b98f958adc8ac7",
+    "massive.en.json": "4af8697c8673bc5dd098c0e3dbe8a979b40fbfc11a5a3468aa29e1f378318181",
+    "massive.ru.json": "37590af67715d8a74246557b9cec87dd64c5fe664748b69927c5c8fe04cff558",
+    "sib200.en.json": "2eae7c8cd50b6e041648db45a40ac3e91bdeb93343ce1db73691f1ad82b24ad1",
+    "xnli_bin_con.en.json": "3ab7e1971d28ed9b37f7aa47ce6145fbb7c8dd565f7d0b68b02795e187850d92",
+    "xnli_bin_ent.en.json": "ae2cf29912c87b1d9528ac9dda682db2963721d03f498e94dcb9011caf8c9285",
+    "xnli.en.json": "cc00403f838dd56bb50560afb191a92a5ce08121375235cefed35b3454b94cf9",
+    "xnli.ru.json": "07d45b0d0ec64091116e82744501d824ea0fcd2d920b7ca997836320ebb8933e"
+  },
+  "cells": {
+    "xnli_fresh-ar": {
+      "file": "20260921T152323Z-xnli_fresh-ar.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 564510,
+      "mean_input_tokens": 470.4,
+      "latency_p50_ms": 293.8,
+      "latency_p95_ms": 382.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-bg": {
+      "file": "20260921T152323Z-xnli_fresh-bg.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 606610,
+      "mean_input_tokens": 505.5,
+      "latency_p50_ms": 295.6,
+      "latency_p95_ms": 369.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-de": {
+      "file": "20260921T152323Z-xnli_fresh-de.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 521834,
+      "mean_input_tokens": 434.9,
+      "latency_p50_ms": 291.9,
+      "latency_p95_ms": 356.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-el": {
+      "file": "20260921T152323Z-xnli_fresh-el.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 614168,
+      "mean_input_tokens": 511.8,
+      "latency_p50_ms": 290.8,
+      "latency_p95_ms": 353.9,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-en": {
+      "file": "20260921T152323Z-xnli_fresh-en.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 507534,
+      "mean_input_tokens": 422.9,
+      "latency_p50_ms": 287.4,
+      "latency_p95_ms": 344.8,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-es": {
+      "file": "20260921T152323Z-xnli_fresh-es.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 517072,
+      "mean_input_tokens": 430.9,
+      "latency_p50_ms": 285.7,
+      "latency_p95_ms": 348.4,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-fr": {
+      "file": "20260921T152323Z-xnli_fresh-fr.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 523740,
+      "mean_input_tokens": 436.4,
+      "latency_p50_ms": 286.7,
+      "latency_p95_ms": 346.9,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-hi": {
+      "file": "20260921T152323Z-xnli_fresh-hi.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 581644,
+      "mean_input_tokens": 484.7,
+      "latency_p50_ms": 285.7,
+      "latency_p95_ms": 345.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-ru": {
+      "file": "20260921T152323Z-xnli_fresh-ru.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 589934,
+      "mean_input_tokens": 491.6,
+      "latency_p50_ms": 288.4,
+      "latency_p95_ms": 388.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-sw": {
+      "file": "20260921T152323Z-xnli_fresh-sw.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 527810,
+      "mean_input_tokens": 439.8,
+      "latency_p50_ms": 283.6,
+      "latency_p95_ms": 344.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-th": {
+      "file": "20260921T152323Z-xnli_fresh-th.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 632346,
+      "mean_input_tokens": 527.0,
+      "latency_p50_ms": 286.7,
+      "latency_p95_ms": 375.4,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-tr": {
+      "file": "20260921T152323Z-xnli_fresh-tr.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 531768,
+      "mean_input_tokens": 443.1,
+      "latency_p50_ms": 287.0,
+      "latency_p95_ms": 350.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-ur": {
+      "file": "20260921T152323Z-xnli_fresh-ur.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 581642,
+      "mean_input_tokens": 484.7,
+      "latency_p50_ms": 289.7,
+      "latency_p95_ms": 349.6,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-vi": {
+      "file": "20260921T152323Z-xnli_fresh-vi.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 528506,
+      "mean_input_tokens": 440.4,
+      "latency_p50_ms": 285.9,
+      "latency_p95_ms": 345.4,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_fresh-zh": {
+      "file": "20260921T152323Z-xnli_fresh-zh.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 522764,
+      "mean_input_tokens": 435.6,
+      "latency_p50_ms": 286.6,
+      "latency_p95_ms": 349.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_ent-en": {
+      "file": "20260921T152323Z-xnli_bin_ent-en.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 481134,
+      "mean_input_tokens": 400.9,
+      "latency_p50_ms": 285.8,
+      "latency_p95_ms": 350.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_ent-ru": {
+      "file": "20260921T152323Z-xnli_bin_ent-ru.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 563534,
+      "mean_input_tokens": 469.6,
+      "latency_p50_ms": 290.8,
+      "latency_p95_ms": 352.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_ent-sw": {
+      "file": "20260921T152323Z-xnli_bin_ent-sw.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 501410,
+      "mean_input_tokens": 417.8,
+      "latency_p50_ms": 291.7,
+      "latency_p95_ms": 355.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_ent-de": {
+      "file": "20260921T152323Z-xnli_bin_ent-de.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 495434,
+      "mean_input_tokens": 412.9,
+      "latency_p50_ms": 299.5,
+      "latency_p95_ms": 438.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_ent-th": {
+      "file": "20260921T152323Z-xnli_bin_ent-th.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 605946,
+      "mean_input_tokens": 505.0,
+      "latency_p50_ms": 294.6,
+      "latency_p95_ms": 367.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_ent-bg": {
+      "file": "20260921T152323Z-xnli_bin_ent-bg.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 580210,
+      "mean_input_tokens": 483.5,
+      "latency_p50_ms": 289.6,
+      "latency_p95_ms": 356.9,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_con-en": {
+      "file": "20260921T152323Z-xnli_bin_con-en.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 482334,
+      "mean_input_tokens": 401.9,
+      "latency_p50_ms": 288.8,
+      "latency_p95_ms": 355.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli_bin_con-ru": {
+      "file": "20260921T152323Z-xnli_bin_con-ru.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 564734,
+      "mean_input_tokens": 470.6,
+      "latency_p50_ms": 285.1,
+      "latency_p95_ms": 347.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-ar": {
+      "file": "20260921T152323Z-sib200-ar.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 203892,
+      "mean_input_tokens": 499.7,
+      "latency_p50_ms": 286.3,
+      "latency_p95_ms": 340.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-bg": {
+      "file": "20260921T152323Z-sib200-bg.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 214756,
+      "mean_input_tokens": 526.4,
+      "latency_p50_ms": 287.5,
+      "latency_p95_ms": 343.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-de": {
+      "file": "20260921T152323Z-sib200-de.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 190022,
+      "mean_input_tokens": 465.7,
+      "latency_p50_ms": 286.7,
+      "latency_p95_ms": 357.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-el": {
+      "file": "20260921T152323Z-sib200-el.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 218984,
+      "mean_input_tokens": 536.7,
+      "latency_p50_ms": 286.4,
+      "latency_p95_ms": 345.3,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-en": {
+      "file": "20260921T152323Z-sib200-en.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 185006,
+      "mean_input_tokens": 453.4,
+      "latency_p50_ms": 289.3,
+      "latency_p95_ms": 357.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-es": {
+      "file": "20260921T152323Z-sib200-es.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 189398,
+      "mean_input_tokens": 464.2,
+      "latency_p50_ms": 291.1,
+      "latency_p95_ms": 377.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-fr": {
+      "file": "20260921T152323Z-sib200-fr.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 190212,
+      "mean_input_tokens": 466.2,
+      "latency_p50_ms": 283.3,
+      "latency_p95_ms": 362.8,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-hi": {
+      "file": "20260921T152323Z-sib200-hi.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 208244,
+      "mean_input_tokens": 510.4,
+      "latency_p50_ms": 283.0,
+      "latency_p95_ms": 344.3,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-ru": {
+      "file": "20260921T152323Z-sib200-ru.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 211332,
+      "mean_input_tokens": 518.0,
+      "latency_p50_ms": 283.5,
+      "latency_p95_ms": 340.4,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-sw": {
+      "file": "20260921T152323Z-sib200-sw.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 192396,
+      "mean_input_tokens": 471.6,
+      "latency_p50_ms": 281.9,
+      "latency_p95_ms": 347.8,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-th": {
+      "file": "20260921T152323Z-sib200-th.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 223284,
+      "mean_input_tokens": 547.3,
+      "latency_p50_ms": 286.5,
+      "latency_p95_ms": 345.4,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-tr": {
+      "file": "20260921T152323Z-sib200-tr.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 193438,
+      "mean_input_tokens": 474.1,
+      "latency_p50_ms": 285.4,
+      "latency_p95_ms": 361.8,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-ur": {
+      "file": "20260921T152323Z-sib200-ur.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 208954,
+      "mean_input_tokens": 512.1,
+      "latency_p50_ms": 288.1,
+      "latency_p95_ms": 374.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-vi": {
+      "file": "20260921T152323Z-sib200-vi.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 191380,
+      "mean_input_tokens": 469.1,
+      "latency_p50_ms": 287.3,
+      "latency_p95_ms": 343.6,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "sib200-zh": {
+      "file": "20260921T152323Z-sib200-zh.jsonl",
+      "rows": 408,
+      "expected_rows": 408,
+      "input_tokens": 191060,
+      "mean_input_tokens": 468.3,
+      "latency_p50_ms": 288.0,
+      "latency_p95_ms": 350.2,
+      "models": [
+        "jev-1.13.0"
+      ]
+    }
+  }
+}
