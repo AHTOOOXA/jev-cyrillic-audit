@@ -1,0 +1,262 @@
+{
+  "run_id": "20260921T124628Z",
+  "study": 2,
+  "model": "jev-1.13.0",
+  "sdk_version": "0.7.0",
+  "python": "3.11.16",
+  "seed": 20260919,
+  "n_per_cell": {
+    "xnli-ar": 600,
+    "xnli-bg": 600,
+    "xnli-de": 600,
+    "xnli-el": 600,
+    "xnli-en": 600,
+    "xnli-es": 600,
+    "xnli-fr": 600,
+    "xnli-hi": 600,
+    "xnli-ru": 600,
+    "xnli-sw": 600,
+    "xnli-th": 600,
+    "xnli-tr": 600,
+    "xnli-ur": 600,
+    "xnli-vi": 600,
+    "xnli-zh": 600,
+    "belebele-en": 900,
+    "belebele-ru": 900
+  },
+  "passes": 2,
+  "instr_lang": "en",
+  "uid_passes": [],
+  "concurrency_rpm_cap": [
+    8,
+    1150.0
+  ],
+  "run_started_utc": "2026-09-21T12:48:26.530Z",
+  "run_finished_utc": "2026-09-21T13:09:10.949Z",
+  "total_calls": 21600,
+  "total_errors_logged": 0,
+  "total_input_tokens": 10689132,
+  "total_cost_usd": 0.4489,
+  "dataset_revisions": {
+    "facebook/xnli": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
+    "mteb/amazon_massive_intent": "940fd47a81eaa7f2cc7b129674d945d618ac38c2",
+    "facebook/belebele": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2"
+  },
+  "items_parquet_sha256": "c1af1744a9f0e7fab7ba9f38ef6574daf449ac21cfdd4fb8ca244000fdd7a1f0",
+  "prereg_file": "PREREG-2.md",
+  "prereg_sha256": "ca81eddf33fe028eee62b0f17184833d2a381f67cdffd5db946167b60c47dd3f",
+  "prompts_sha256": {
+    "belebele.en.json": "8d6d05018814723046ea715c4f5bb2a90bf1d588145d5c6d3d3420465b40cd1c",
+    "belebele.ru.json": "aeb5c01fd220c1b4f330b96c7581ca18d880a0f44188340c59b98f958adc8ac7",
+    "massive.en.json": "4af8697c8673bc5dd098c0e3dbe8a979b40fbfc11a5a3468aa29e1f378318181",
+    "massive.ru.json": "37590af67715d8a74246557b9cec87dd64c5fe664748b69927c5c8fe04cff558",
+    "xnli.en.json": "cc00403f838dd56bb50560afb191a92a5ce08121375235cefed35b3454b94cf9",
+    "xnli.ru.json": "07d45b0d0ec64091116e82744501d824ea0fcd2d920b7ca997836320ebb8933e"
+  },
+  "cells": {
+    "xnli-ar": {
+      "file": "20260921T124628Z-xnli-ar.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 564678,
+      "mean_input_tokens": 470.6,
+      "latency_p50_ms": 294.4,
+      "latency_p95_ms": 378.6,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-bg": {
+      "file": "20260921T124628Z-xnli-bg.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 607214,
+      "mean_input_tokens": 506.0,
+      "latency_p50_ms": 294.2,
+      "latency_p95_ms": 417.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-de": {
+      "file": "20260921T124628Z-xnli-de.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 521662,
+      "mean_input_tokens": 434.7,
+      "latency_p50_ms": 310.0,
+      "latency_p95_ms": 437.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-el": {
+      "file": "20260921T124628Z-xnli-el.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 614270,
+      "mean_input_tokens": 511.9,
+      "latency_p50_ms": 307.5,
+      "latency_p95_ms": 411.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-en": {
+      "file": "20260921T124628Z-xnli-en.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 507666,
+      "mean_input_tokens": 423.1,
+      "latency_p50_ms": 304.9,
+      "latency_p95_ms": 443.9,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-es": {
+      "file": "20260921T124628Z-xnli-es.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 517520,
+      "mean_input_tokens": 431.3,
+      "latency_p50_ms": 302.1,
+      "latency_p95_ms": 403.3,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-fr": {
+      "file": "20260921T124628Z-xnli-fr.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 523788,
+      "mean_input_tokens": 436.5,
+      "latency_p50_ms": 303.5,
+      "latency_p95_ms": 486.3,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-hi": {
+      "file": "20260921T124628Z-xnli-hi.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 582366,
+      "mean_input_tokens": 485.3,
+      "latency_p50_ms": 313.4,
+      "latency_p95_ms": 458.3,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-ru": {
+      "file": "20260921T124628Z-xnli-ru.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 589744,
+      "mean_input_tokens": 491.5,
+      "latency_p50_ms": 304.2,
+      "latency_p95_ms": 394.7,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-sw": {
+      "file": "20260921T124628Z-xnli-sw.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 528660,
+      "mean_input_tokens": 440.6,
+      "latency_p50_ms": 305.3,
+      "latency_p95_ms": 420.8,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-th": {
+      "file": "20260921T124628Z-xnli-th.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 633218,
+      "mean_input_tokens": 527.7,
+      "latency_p50_ms": 300.8,
+      "latency_p95_ms": 365.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-tr": {
+      "file": "20260921T124628Z-xnli-tr.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 532314,
+      "mean_input_tokens": 443.6,
+      "latency_p50_ms": 299.6,
+      "latency_p95_ms": 390.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-ur": {
+      "file": "20260921T124628Z-xnli-ur.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 583876,
+      "mean_input_tokens": 486.6,
+      "latency_p50_ms": 300.9,
+      "latency_p95_ms": 457.9,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-vi": {
+      "file": "20260921T124628Z-xnli-vi.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 528038,
+      "mean_input_tokens": 440.0,
+      "latency_p50_ms": 305.1,
+      "latency_p95_ms": 490.0,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "xnli-zh": {
+      "file": "20260921T124628Z-xnli-zh.jsonl",
+      "rows": 1200,
+      "expected_rows": 1200,
+      "input_tokens": 523104,
+      "mean_input_tokens": 435.9,
+      "latency_p50_ms": 305.0,
+      "latency_p95_ms": 515.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "belebele-en": {
+      "file": "20260921T124628Z-belebele-en.jsonl",
+      "rows": 1800,
+      "expected_rows": 1800,
+      "input_tokens": 874718,
+      "mean_input_tokens": 486.0,
+      "latency_p50_ms": 312.5,
+      "latency_p95_ms": 527.1,
+      "models": [
+        "jev-1.13.0"
+      ]
+    },
+    "belebele-ru": {
+      "file": "20260921T124628Z-belebele-ru.jsonl",
+      "rows": 1800,
+      "expected_rows": 1800,
+      "input_tokens": 1456296,
+      "mean_input_tokens": 809.1,
+      "latency_p50_ms": 307.7,
+      "latency_p95_ms": 482.5,
+      "models": [
+        "jev-1.13.0"
+      ]
+    }
+  }
+}
