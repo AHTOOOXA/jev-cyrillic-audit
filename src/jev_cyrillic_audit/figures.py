@@ -153,7 +153,8 @@ def panorama_chart(res: dict, out: Path) -> None:
         ax.scatter([bx], [by], s=80, marker="D", color=C["ru"], edgecolor="white", linewidth=1.2, zorder=5)
         ax.annotate("ru · Belebele", (bx, by), textcoords="offset points", xytext=(6, -12), fontsize=9, color=C["ru"])
         ax.set_xscale("log")
-        ticks = [1, 1.5, 2, 3, 4, 6, 8]
+        ticks = [1, 1.5, 2, 3, 4, 5]
+        ax.set_xlim(0.92, 5.2)
         ax.set_xticks(ticks); ax.set_xticklabels([f"{v:g}×" for v in ticks]); ax.minorticks_off()
         ax.set_xlabel("state tokens relative to English (same text)")
         ax.set_ylabel(ylabel)
@@ -167,4 +168,29 @@ def panorama_chart(res: dict, out: Path) -> None:
     fig.tight_layout()
     fig.savefig(out, dpi=200, bbox_inches="tight")
     plt.close(fig)
+    print("figure:", out.name)
+
+
+def neutral_drift_chart(res: dict, out: Path) -> None:
+    """Exploratory RQ3: excess `neutral` predictions vs accuracy loss, one point per language."""
+    langs = res["xnli_languages"]; t = res["tests"]["rq3_excess_neutral_vs_dacc"]
+    fig, ax = plt.subplots(figsize=(6.4, 5.6))
+    ax.axhline(0, color=INK3, lw=1, ls="--", zorder=1); ax.axvline(0, color=INK3, lw=1, ls="--", zorder=1)
+    for l, r in langs.items():
+        x, y = r["excess_neutral"] * 100, r["d_acc"]["delta"] * 100
+        latin = r["script"] == "latin"
+        ax.errorbar([x], [y], yerr=[[y - r["d_acc"]["ci_low"] * 100], [r["d_acc"]["ci_high"] * 100 - y]], fmt="none", ecolor=C["en"], elinewidth=1.1, alpha=0.5, capsize=2, zorder=2)
+        ax.scatter([x], [y], s=64, facecolor=C["en"] if latin else "white", edgecolor=C["en"], linewidth=1.8, zorder=4)
+        ax.annotate(l, (x, y), textcoords="offset points", xytext=(6, 4), fontsize=9, color=INK)
+    ax.scatter([0], [0], s=64, color=INK3, zorder=4); ax.annotate("en", (0, 0), textcoords="offset points", xytext=(6, -12), fontsize=9, color=INK2)
+    xs = np.array([r["excess_neutral"] * 100 for r in langs.values()]); ys = np.array([r["d_acc"]["delta"] * 100 for r in langs.values()])
+    b, a = np.polyfit(xs, ys, 1); xx = np.linspace(0, xs.max() * 1.05, 2)
+    ax.plot(xx, a + b * xx, color=INK3, lw=1, zorder=1)
+    ax.set_xlabel("excess `neutral` predictions vs English (pp of items)")
+    ax.set_ylabel("Δaccuracy vs English (pp)")
+    ax.grid(True, color=GRID, lw=0.6, zorder=0)
+    ax.set_title(f"Spearman ρ = {t['rho']:+.2f}, Pearson r = {t['pearson_r']:+.2f}   (exploratory, RQ3)", fontsize=10.5, loc="left", color=INK)
+    fig.suptitle(f"Jev ({res['model']}) — the accuracy loss in a language is its drift toward `neutral`\nXNLI, 14 languages vs English, same 600 items", fontsize=12, x=0.01, ha="left", color=INK)
+    fig.text(0.01, -0.03, f"Slope {b:+.2f} pp accuracy per pp of excess neutral. Filled = Latin script, hollow = other. Bars = paired 95% CI on Δaccuracy. github.com/AHTOOOXA/jev-cyrillic-audit", fontsize=8, color=INK3)
+    fig.tight_layout(); fig.savefig(out, dpi=200, bbox_inches="tight"); plt.close(fig)
     print("figure:", out.name)

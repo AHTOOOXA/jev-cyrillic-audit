@@ -201,8 +201,9 @@ def main() -> None:
     Path(a.out).with_suffix(".md").write_text(table.strip() + "\n")
     print(table)
     if a.figures:
-        from .figures import panorama_chart
+        from .figures import neutral_drift_chart, panorama_chart
         panorama_chart(res, Path(a.figures) / "panorama_ece_vs_tokens.png")
+        neutral_drift_chart(res, Path(a.figures) / "panorama_neutral_drift.png")
 
 
 if __name__ == "__main__":
