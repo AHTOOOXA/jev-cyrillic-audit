@@ -1,0 +1,13 @@
+{
+  "dataset": "xnli_bin_ent",
+  "instr_lang": "en",
+  "state_schema": [
+    "premise",
+    "hypothesis"
+  ],
+  "instructions": "Given `premise`, is `hypothesis` true?",
+  "criteria": {
+    "entailment": "`premise` makes `hypothesis` true.",
+    "not_entailment": "`premise` does not make `hypothesis` true (it is undetermined or false)."
+  }
+}

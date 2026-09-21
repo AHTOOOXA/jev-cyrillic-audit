@@ -30,5 +30,41 @@
     },
     "model": "jev-1.13.0",
     "request_id": "req_01a0c3f8f0267abf82f0a24d52c34465"
+  },
+  "xnli_bin_ent": {
+    "input_tokens_with_minimal_state": 368,
+    "minimal_state": {
+      "premise": ".",
+      "hypothesis": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0c48ed93c70ef96879a768b2aacbc"
+  },
+  "xnli_bin_con": {
+    "input_tokens_with_minimal_state": 369,
+    "minimal_state": {
+      "premise": ".",
+      "hypothesis": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0c48eda7b75a38fafe432beaca874"
+  },
+  "sib200": {
+    "input_tokens_with_minimal_state": 427,
+    "minimal_state": {
+      "text": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0c48edb957184949b03513e8f3d3f"
+  },
+  "xnli_fresh": {
+    "input_tokens_with_minimal_state": 390,
+    "minimal_state": {
+      "premise": ".",
+      "hypothesis": "."
+    },
+    "model": "jev-1.13.0",
+    "request_id": "req_01a0be3fb32b7bc89c9da89c30b1b3fb",
+    "note": "same prompt as xnli"
   }
 }

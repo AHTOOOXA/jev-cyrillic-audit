@@ -11,10 +11,15 @@ from typesafe_sdk import Choice
 PROMPTS_DIR = Path(__file__).resolve().parents[2] / "prompts"
 
 
+# Datasets that reuse another dataset's frozen prompt unchanged (Study 3: fresh XNLI items, same question).
+PROMPT_OF = {"xnli_fresh": "xnli"}
+
+
 @lru_cache(maxsize=None)
 def load_prompt(dataset: str, instr_lang: str) -> dict:
-    p = json.loads((PROMPTS_DIR / f"{dataset}.{instr_lang}.json").read_text())
-    assert p["dataset"] == dataset and p["instr_lang"] == instr_lang
+    name = PROMPT_OF.get(dataset, dataset)
+    p = json.loads((PROMPTS_DIR / f"{name}.{instr_lang}.json").read_text())
+    assert p["dataset"] == name and p["instr_lang"] == instr_lang
     return p
 
 

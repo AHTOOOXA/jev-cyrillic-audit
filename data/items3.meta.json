@@ -1,0 +1,256 @@
+{
+  "seed": 20260921,
+  "n_xnli_fresh": 600,
+  "xnli": {
+    "split": "validation",
+    "n_source": 2490,
+    "n_aligned_all_langs": 2490,
+    "misaligned_full": {
+      "ar": [],
+      "bg": [],
+      "de": [],
+      "el": [],
+      "en": [],
+      "es": [],
+      "fr": [],
+      "hi": [],
+      "ru": [],
+      "sw": [],
+      "th": [],
+      "tr": [],
+      "ur": [],
+      "vi": [],
+      "zh": []
+    },
+    "gold_counts_fresh": {
+      "contradiction": 200,
+      "entailment": 200,
+      "neutral": 200
+    }
+  },
+  "sib200": {
+    "revision": "38977a667f6fc264d5c26ec57a01e16db040b358",
+    "per_lang": {
+      "ar": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "bg": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "de": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "el": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "en": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "es": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "fr": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "hi": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "ru": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "sw": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "th": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "tr": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "ur": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "vi": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      },
+      "zh": {
+        "n_rows": 204,
+        "gold_counts": {
+          "science_technology": 51,
+          "travel": 40,
+          "politics": 30,
+          "sports": 25,
+          "health": 22,
+          "entertainment": 19,
+          "geography": 17
+        }
+      }
+    }
+  },
+  "rows_per_dataset_lang": {
+    "sib200/ar": 204,
+    "sib200/bg": 204,
+    "sib200/de": 204,
+    "sib200/el": 204,
+    "sib200/en": 204,
+    "sib200/es": 204,
+    "sib200/fr": 204,
+    "sib200/hi": 204,
+    "sib200/ru": 204,
+    "sib200/sw": 204,
+    "sib200/th": 204,
+    "sib200/tr": 204,
+    "sib200/ur": 204,
+    "sib200/vi": 204,
+    "sib200/zh": 204,
+    "xnli_bin_con/en": 600,
+    "xnli_bin_con/ru": 600,
+    "xnli_bin_ent/bg": 600,
+    "xnli_bin_ent/de": 600,
+    "xnli_bin_ent/en": 600,
+    "xnli_bin_ent/ru": 600,
+    "xnli_bin_ent/sw": 600,
+    "xnli_bin_ent/th": 600,
+    "xnli_fresh/ar": 600,
+    "xnli_fresh/bg": 600,
+    "xnli_fresh/de": 600,
+    "xnli_fresh/el": 600,
+    "xnli_fresh/en": 600,
+    "xnli_fresh/es": 600,
+    "xnli_fresh/fr": 600,
+    "xnli_fresh/hi": 600,
+    "xnli_fresh/ru": 600,
+    "xnli_fresh/sw": 600,
+    "xnli_fresh/th": 600,
+    "xnli_fresh/tr": 600,
+    "xnli_fresh/ur": 600,
+    "xnli_fresh/vi": 600,
+    "xnli_fresh/zh": 600
+  }
+}

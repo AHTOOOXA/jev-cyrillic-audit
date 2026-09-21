@@ -1,0 +1,13 @@
+{
+  "dataset": "xnli_bin_con",
+  "instr_lang": "en",
+  "state_schema": [
+    "premise",
+    "hypothesis"
+  ],
+  "instructions": "Given `premise`, is `hypothesis` false?",
+  "criteria": {
+    "contradiction": "`premise` makes `hypothesis` false.",
+    "not_contradiction": "`premise` does not make `hypothesis` false (it is true or undetermined)."
+  }
+}

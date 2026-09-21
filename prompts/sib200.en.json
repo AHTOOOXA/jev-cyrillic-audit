@@ -1,0 +1,17 @@
+{
+  "dataset": "sib200",
+  "instr_lang": "en",
+  "state_schema": [
+    "text"
+  ],
+  "instructions": "Which topic does `text` belong to?",
+  "criteria": {
+    "science_technology": "Science or technology",
+    "travel": "Travel, tourism, places to visit",
+    "politics": "Politics, government, elections, policy",
+    "sports": "Sports",
+    "health": "Health, medicine, disease",
+    "entertainment": "Entertainment: film, music, celebrities, games",
+    "geography": "Geography: physical places, regions, natural features"
+  }
+}

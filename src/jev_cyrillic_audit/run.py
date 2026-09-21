@@ -46,8 +46,13 @@ SCRATCH = ROOT / "scratch"
 CELLS = ("xnli-en", "xnli-ru", "massive-en", "massive-ru")                       # study 1
 XNLI_LANGS = ("ar", "bg", "de", "el", "en", "es", "fr", "hi", "ru", "sw", "th", "tr", "ur", "vi", "zh")
 CELLS2 = tuple(f"xnli-{l}" for l in XNLI_LANGS) + ("belebele-en", "belebele-ru")   # study 2 (Panorama)
+CELLS3 = (tuple(f"xnli_fresh-{l}" for l in XNLI_LANGS)
+          + tuple(f"xnli_bin_ent-{l}" for l in ("en", "ru", "sw", "de", "th", "bg"))
+          + tuple(f"xnli_bin_con-{l}" for l in ("en", "ru"))
+          + tuple(f"sib200-{l}" for l in XNLI_LANGS))                                  # study 3 (Mechanism)
 STUDIES = {1: {"cells": CELLS, "prereg": "PREREG.md", "items": "data/items.parquet"},
-           2: {"cells": CELLS2, "prereg": "PREREG-2.md", "items": "data/items2.parquet"}}
+           2: {"cells": CELLS2, "prereg": "PREREG-2.md", "items": "data/items2.parquet"},
+           3: {"cells": CELLS3, "prereg": "PREREG-3.md", "items": "data/items3.parquet"}}
 ROW_FIELDS = (
     "item_id", "dataset", "lang", "instr_lang", "pass", "gold", "pred", "choice", "p_max", "confidence",
     "probs", "input_tokens", "latency_ms", "model", "request_id", "ts",
@@ -208,7 +213,7 @@ class Runner:
 
 def parse_cell(name: str, instr_lang: str) -> dict:
     dataset, lang = name.split("-")
-    assert name in CELLS or name in CELLS2, name
+    assert name in CELLS or name in CELLS2 or name in CELLS3, name
     return {"name": name, "dataset": dataset, "lang": lang, "instr_lang": instr_lang}
 
 
@@ -218,8 +223,9 @@ def cell_frame(study: int, items: pd.DataFrame, cell: dict, limit: int | None) -
         df = join_items(items, cell["dataset"])
         out = pd.DataFrame({"item_id": df["item_id"], "gold": df["gold"], "state": df[f"state_{cell['lang']}"], "criteria": None})
     else:
-        from .data import join_items2
-        df = join_items2(items, cell["dataset"], cell["lang"])
+        from .data import join_items2, join_items3
+        join = join_items2 if study == 2 else join_items3
+        df = join(items, cell["dataset"], cell["lang"])
         out = df[["item_id", "gold", "state", "criteria"]].reset_index(drop=True)
     return out.head(limit) if limit else out
 
@@ -316,8 +322,8 @@ async def main_async(a: argparse.Namespace) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--smoke", action="store_true", help="one call, print and assert the model id")
-    ap.add_argument("--study", type=int, default=1, choices=(1, 2), help="1 = RU vs EN MVP; 2 = Panorama (XNLI x15 + Belebele)")
-    ap.add_argument("--cells", nargs="+", default=None, choices=tuple(dict.fromkeys(CELLS + CELLS2)), help="default: all cells of the study")
+    ap.add_argument("--study", type=int, default=1, choices=(1, 2, 3), help="1 = RU vs EN MVP; 2 = Panorama; 3 = Mechanism (fresh XNLI, binary framings, SIB-200)")
+    ap.add_argument("--cells", nargs="+", default=None, choices=tuple(dict.fromkeys(CELLS + CELLS2 + CELLS3)), help="default: all cells of the study")
     ap.add_argument("--instr-lang", default="en", choices=("en", "ru"))
     ap.add_argument("--passes", type=int, default=2)
     ap.add_argument("--limit", type=int, default=None, help="first N items per dataset (dry runs)")

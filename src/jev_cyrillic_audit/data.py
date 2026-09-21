@@ -26,10 +26,13 @@ LANGS = ("en", "ru")
 
 # HF commit hashes queried 2026-09-20 (xnli, massive) and 2026-09-21 (belebele); also recorded in
 # PREREG.md / PREREG2.md and manifest.json.
+ROOT_DATA = Path(__file__).resolve().parents[2] / "data"
+
 REVISIONS = {
     "facebook/xnli": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
     "mteb/amazon_massive_intent": "940fd47a81eaa7f2cc7b129674d945d618ac38c2",
     "facebook/belebele": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2",
+    "Davlan/sib200": "38977a667f6fc264d5c26ec57a01e16db040b358",
 }
 
 XNLI_MISALIGNED_ROWS = {2805, 2806}
@@ -95,7 +98,7 @@ def load_parallel(dataset: str) -> pd.DataFrame:
         keep = [i for i in range(len(en)) if i not in misaligned]
         df = pd.DataFrame(
             {
-                "item_id": [str(i) for i in keep],  # row index in the pinned test split
+                "item_id": [str(i) for i in keep],  # row index in the pinned split
                 "gold": [names[lab_en[i]] for i in keep],
                 "state_en": [{"premise": en[i]["premise"], "hypothesis": en[i]["hypothesis"]} for i in keep],
                 "state_ru": [{"premise": ru[i]["premise"], "hypothesis": ru[i]["hypothesis"]} for i in keep],
@@ -209,29 +212,31 @@ def _script_share(texts: pd.Series, lang: str) -> float | None:
     return float(texts.map(lambda t: bool(rx.search(t))).mean())
 
 
-def load_xnli_lang(lang: str) -> pd.DataFrame:
+def load_xnli_lang(lang: str, split: str = "test") -> pd.DataFrame:
     """One XNLI language: `item_id` (row index), `gold` (label name), `state` ({premise, hypothesis}).
 
     Aligned against the `en` config by row index. Rows whose label differs from `en` are misaligned
-    (in `ru` exactly XNLI_MISALIGNED_ROWS); they are dropped and the full set is recorded in
-    `df.attrs["misaligned_rows"]` (sorted list). Non-Latin languages are also script-checked.
+    (in the test split of `ru` exactly XNLI_MISALIGNED_ROWS); they are dropped and the full set is
+    recorded in `df.attrs["misaligned_rows"]` (sorted list). Non-Latin languages are script-checked.
+    `split="validation"` (2,490 rows) is the fresh-item pool of Study 3.
     """
     assert lang in XNLI_LANGS, lang
     spec = DATASETS2["xnli"]
-    en = _load(spec["repo"], "en", spec["split"])
-    d = en if lang == "en" else _load(spec["repo"], lang, spec["split"])
-    assert len(en) == len(d) == spec["n_source"], (len(en), len(d))
+    n_source = {"test": 5010, "validation": 2490}[split]
+    en = _load(spec["repo"], "en", split)
+    d = en if lang == "en" else _load(spec["repo"], lang, split)
+    assert len(en) == len(d) == n_source, (len(en), len(d))
     names = en.features["label"].names
     assert d.features["label"].names == names, f"xnli/{lang}: label names differ from en"
     lab_en, lab = np.asarray(en["label"]), np.asarray(d["label"])
     misaligned = set(np.where(lab != lab_en)[0].tolist())
-    if lang == "ru":
+    if lang == "ru" and split == "test":
         assert misaligned == XNLI_MISALIGNED_ROWS, f"XNLI misaligned rows changed: {sorted(misaligned)}"
     keep = [i for i in range(len(d)) if i not in misaligned]
     prem, hyp = d["premise"], d["hypothesis"]
     df = pd.DataFrame(
         {
-            "item_id": [str(i) for i in keep],  # row index in the pinned test split
+            "item_id": [str(i) for i in keep],  # row index in the pinned split
             "gold": [names[lab[i]] for i in keep],
             "state": [{"premise": prem[i], "hypothesis": hyp[i]} for i in keep],
         }
@@ -404,14 +409,115 @@ def join_items2(items2: pd.DataFrame, dataset: str, lang: str) -> pd.DataFrame:
     return out[["item_id", "gold", "state", "criteria"]]
 
 
+# --- Study 3 ("Mechanism") ------------------------------------------------------------------------
+SEED3 = 20260921
+# SIB-200 (Davlan/sib200): 7 topics, 204 test sentences per language, parallel by index_id; FLORES codes.
+SIB200_LANGS = {"ar": "arb_Arab", "bg": "bul_Cyrl", "de": "deu_Latn", "el": "ell_Grek", "en": "eng_Latn",
+                "es": "spa_Latn", "fr": "fra_Latn", "hi": "hin_Deva", "ru": "rus_Cyrl", "sw": "swh_Latn",
+                "th": "tha_Thai", "tr": "tur_Latn", "ur": "urd_Arab", "vi": "vie_Latn", "zh": "zho_Hans"}
+SIB200_KEYS = {"science/technology": "science_technology", "travel": "travel", "politics": "politics",
+               "sports": "sports", "health": "health", "entertainment": "entertainment", "geography": "geography"}
+BIN_LANGS_ENT = ("en", "ru", "sw", "de", "th", "bg")
+BIN_LANGS_CON = ("en", "ru")
+# Study-3 datasets share prompts/loaders: fresh XNLI items under three question framings, plus SIB-200.
+STUDY3_XNLI = {"xnli_fresh": None, "xnli_bin_ent": ("entailment", "not_entailment"), "xnli_bin_con": ("contradiction", "not_contradiction")}
+
+
+def _bin_gold(gold: str, spec: tuple[str, str] | None) -> str:
+    return gold if spec is None else (spec[0] if gold == spec[0] else spec[1])
+
+
+def load_sib200(lang: str) -> pd.DataFrame:
+    """One SIB-200 language: `item_id` (index_id), `gold` (topic key), `state` ({text})."""
+    assert lang in SIB200_LANGS, lang
+    repo = "Davlan/sib200"
+    en = _load(repo, SIB200_LANGS["en"], "test").to_pandas()
+    d = en if lang == "en" else _load(repo, SIB200_LANGS[lang], "test").to_pandas()
+    assert len(en) == len(d) == 204, (len(en), len(d))
+    m = pd.merge(en, d, on="index_id", suffixes=("_en", "_l"), validate="one_to_one")
+    assert len(m) == 204 and (m["category_en"] == m["category_l"]).all(), f"sib200/{lang}: categories differ from en"
+    assert set(m["category_en"]) == set(SIB200_KEYS), sorted(set(m["category_en"]))
+    df = pd.DataFrame({"item_id": m["index_id"].astype(str), "gold": m["category_en"].map(SIB200_KEYS),
+                       "state": [{"text": t} for t in m["text_l"]]})
+    share = _script_share(df["state"].map(lambda st: st["text"]), lang)
+    assert share is None or share > 0.95, f"sib200/{lang}: expected script in only {share:.3f} of texts"
+    if lang != "en":
+        assert (m["text_l"] != m["text_en"]).mean() > 0.95, f"sib200/{lang}: texts identical to en"
+    return df.sort_values("item_id", kind="stable").reset_index(drop=True)
+
+
+def build_items3(n: int = N_PER_DATASET, seed: int = SEED3) -> tuple[pd.DataFrame, dict]:
+    """LONG frame for Study 3: fresh XNLI validation items (600, stratified, aligned in all 15 languages)
+    under three framings, and all 204 SIB-200 items in 15 languages. No text."""
+    xn = {l: load_xnli_lang(l, "validation") for l in XNLI_LANGS}
+    common = set(xn["en"]["item_id"])
+    for l in XNLI_LANGS:
+        common &= set(xn[l]["item_id"])
+    pool = xn["en"][xn["en"]["item_id"].isin(common)].copy()
+    pool.insert(0, "dataset", "xnli_fresh")
+    sample = stratified_sample(pool, n, seed)
+    ids = sample["item_id"].tolist()
+    assert len(set(ids)) == n
+    rows, meta = [], {"seed": seed, "n_xnli_fresh": n, "xnli": {"split": "validation", "n_source": 2490, "n_aligned_all_langs": len(common),
+                      "misaligned_full": {l: xn[l].attrs["misaligned_rows"] for l in XNLI_LANGS}}, "sib200": {"revision": REVISIONS["Davlan/sib200"], "per_lang": {}}}
+    for l in XNLI_LANGS:
+        f = xn[l].set_index("item_id").loc[ids]
+        for ds, spec in STUDY3_XNLI.items():
+            langs = XNLI_LANGS if ds == "xnli_fresh" else (BIN_LANGS_ENT if ds == "xnli_bin_ent" else BIN_LANGS_CON)
+            if l not in langs:
+                continue
+            for iid, g, st in zip(ids, f["gold"], f["state"]):
+                rows.append((ds, iid, l, _bin_gold(g, spec), state_hash(st), ""))
+    for l in SIB200_LANGS:
+        f = load_sib200(l)
+        meta["sib200"]["per_lang"][l] = {"n_rows": len(f), "gold_counts": f["gold"].value_counts().to_dict()}
+        for iid, g, st in zip(f["item_id"], f["gold"], f["state"]):
+            rows.append(("sib200", iid, l, g, state_hash(st), ""))
+    items3 = pd.DataFrame(rows, columns=["dataset", "item_id", "lang", "gold", "state_sha256", "criteria_sha256"])
+    meta["rows_per_dataset_lang"] = {f"{k[0]}/{k[1]}": int(v) for k, v in items3.groupby(["dataset", "lang"]).size().items()}
+    meta["xnli"]["gold_counts_fresh"] = sample["gold"].value_counts().to_dict()
+    return items3, meta
+
+
+def join_items3(items3: pd.DataFrame, dataset: str, lang: str) -> pd.DataFrame:
+    """Re-attach text for one (dataset, lang) of the Study 3 freeze; verify every hash."""
+    sub = items3[(items3["dataset"] == dataset) & (items3["lang"] == lang)]
+    assert len(sub) > 0, f"{dataset}/{lang}: not in items3"
+    if dataset in STUDY3_XNLI:
+        full = load_xnli_lang(lang, "validation").set_index("item_id")
+        out = full.loc[sub["item_id"].to_numpy()].reset_index()
+        out["gold"] = out["gold"].map(lambda g: _bin_gold(g, STUDY3_XNLI[dataset]))
+    elif dataset == "sib200":
+        out = load_sib200(lang).set_index("item_id").loc[sub["item_id"].to_numpy()].reset_index()
+    else:
+        raise KeyError(dataset)
+    got = out["state"].map(state_hash).to_numpy()
+    assert (got == sub["state_sha256"].to_numpy()).all(), f"{dataset}/{lang}: state hash mismatch — HF revision drift?"
+    assert (out["gold"].to_numpy() == sub["gold"].to_numpy()).all()
+    out["criteria"] = None
+    return out[["item_id", "gold", "state", "criteria"]]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Freeze the item sample (no text) to data/items.parquet")
-    ap.add_argument("--out", default=None, help="default data/items.parquet, or data/items2.parquet with --study2")
+    ap.add_argument("--out", default=None, help="default data/items.parquet, data/items2.parquet with --study2, data/items3.parquet with --study3")
+    ap.add_argument("--study3", action="store_true", help="build the Study 3 item file (fresh XNLI validation items + SIB-200)")
     ap.add_argument("--n", type=int, default=N_PER_DATASET)
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--study2", action="store_true", help="build the Study 2 long frame from the frozen Study 1 ids")
     ap.add_argument("--items", default="data/items.parquet", help="Study 1 freeze to take the XNLI ids from (--study2)")
     a = ap.parse_args()
+    if a.study3:
+        out = a.out or "data/items3.parquet"
+        items3, meta = build_items3(a.n, SEED3)
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        items3.to_parquet(out, index=False)
+        Path(out).with_suffix(".meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False, default=int) + "\n")
+        print(items3.groupby(["dataset", "lang"], sort=False).size().to_string())
+        print("xnli validation aligned in all 15 languages:", meta["xnli"]["n_aligned_all_langs"], "of 2490;",
+              "misaligned per lang:", {l: len(v) for l, v in meta["xnli"]["misaligned_full"].items() if v})
+        print("fresh gold counts:", meta["xnli"]["gold_counts_fresh"])
+        return
     if a.study2:
         out = a.out or "data/items2.parquet"
         items2, meta = build_items2(a.items)
