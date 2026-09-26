@@ -100,8 +100,22 @@ def done_keys(path: Path) -> set[tuple[str, str, str]]:
     return keys
 
 
-def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, data_sharing: str) -> None:
-    from openai import OpenAI
+class Pacer:
+    """Spaces request starts to stay under a requests-per-minute limit (shared by all threads)."""
+
+    def __init__(self, rpm: int):
+        self.gap, self.next, self.lock = 60.0 / rpm, time.monotonic(), threading.Lock()
+
+    def wait(self) -> None:
+        with self.lock:
+            now = time.monotonic()
+            t = max(now, self.next)
+            self.next = t + self.gap
+        time.sleep(max(0.0, t - now))
+
+
+def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, data_sharing: str, rpm: int) -> None:
+    from openai import APIError, OpenAI
 
     p, phash = load_prompts()
     client = OpenAI(max_retries=6)
@@ -113,13 +127,15 @@ def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, d
     todo = [j for j in jobs_for(df) if j[:3] not in done_keys(raw_path)]
     print(f"{len(df)} items, {len(todo)} requests to do")
 
-    lock, used = threading.Lock(), {"tok": 0, "n": 0, "bad": 0}
+    lock, used = threading.Lock(), {"tok": 0, "n": 0, "bad": 0, "err": 0, "err_run": 0}
+    pacer = Pacer(rpm)
 
     def one(job):
         iid, cond, field, texts = job
         keys = list(texts)
         prompt = p["separate" if cond == "sep" else "joint"].format(**texts)
         for attempt in (1, 2):
+            pacer.wait()
             r = client.chat.completions.create(
                 model=p["model"],
                 messages=[{"role": "system", "content": p["system"]}, {"role": "user", "content": prompt}],
@@ -146,7 +162,16 @@ def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, d
     with raw_path.open("a", encoding="utf-8") as f, ThreadPoolExecutor(concurrency) as ex:
         futs = [ex.submit(one, j) for j in todo]
         for fut in as_completed(futs):
-            row = fut.result()
+            try:
+                row = fut.result()
+            except APIError as e:  # left undone; the next run resumes it
+                with lock:
+                    used["err"] += 1
+                    used["err_run"] += 1
+                    if used["err_run"] >= 20:
+                        raise SystemExit(f"20 consecutive API errors, last: {e}") from e
+                continue
+            used["err_run"] = 0
             assert row["model"].startswith(p["model"].rsplit("-", 3)[0]), f"model drift: {row['model']}"
             with lock:
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -161,7 +186,7 @@ def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, d
     manifest = {
         "study": 4, "step": "translation", "prompts_file": str(PROMPTS.name), "prompts_sha256": phash,
         "translator": p["model"], "temperature": p["temperature"], "seed": p["seed"],
-        "items": len(df), "requests_this_run": used["n"], "invalid_this_run": used["bad"],
+        "items": len(df), "requests_this_run": used["n"], "invalid_this_run": used["bad"], "api_errors_this_run": used["err"],
         "tokens_this_run": used["tok"], "openai_data_sharing": data_sharing,
         "finished": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
@@ -206,11 +231,12 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=Path("runs/study4/translation"))
     ap.add_argument("--limit", type=int)
     ap.add_argument("--concurrency", type=int, default=16)
+    ap.add_argument("--rpm", type=int, default=400, help="requests per minute (org limit for gpt-4.1-mini was 500)")
     ap.add_argument("--max-tokens-total", type=int, default=8_000_000)
     ap.add_argument("--data-sharing", default="on", help="OpenAI org data-sharing setting, recorded in the manifest")
     a = ap.parse_args()
     if a.cmd == "run":
-        run(a.out, a.limit, a.concurrency, a.max_tokens_total, a.data_sharing)
+        run(a.out, a.limit, a.concurrency, a.max_tokens_total, a.data_sharing, a.rpm)
     else:
         assemble(a.out)
 
