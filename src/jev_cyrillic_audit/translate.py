@@ -52,8 +52,15 @@ def cyrillic_share(text: str) -> float:
 
 
 def valid(texts: list[str]) -> bool:
-    # Proper names may stay in Latin script; a translation that is mostly Latin is a failure.
-    return all(t.strip() and cyrillic_share(t) >= 0.5 for t in texts)
+    # Non-empty and at least one Cyrillic letter. Names, titles and URLs legitimately stay in Latin script
+    # (e.g. "Carrer dels Banys Nous назван в честь бань."), so no minimum Cyrillic share: an earlier 0.5
+    # threshold rejected 12 such correct translations in the first full run.
+    return all(isinstance(t, str) and t.strip() and _CYR.search(t) for t in texts)
+
+
+def row_ok(r: dict) -> bool:
+    """Validity is recomputed from the stored output, so a change to `valid` applies to old log rows."""
+    return isinstance(r.get("output"), dict) and valid(list(r["output"].values()))
 
 
 def _schema(keys: list[str]) -> dict:
@@ -95,7 +102,7 @@ def done_keys(path: Path) -> set[tuple[str, str, str]]:
     keys = set()
     for line in path.open(encoding="utf-8"):
         r = json.loads(line)
-        if r["valid"]:
+        if row_ok(r):
             keys.add((r["item_id"], r["condition"], r["field"]))
     return keys
 
@@ -124,7 +131,8 @@ def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, d
     df = items()
     if limit:
         df = df.iloc[:limit]
-    todo = [j for j in jobs_for(df) if j[:3] not in done_keys(raw_path)]
+    done = done_keys(raw_path)
+    todo = [j for j in jobs_for(df) if j[:3] not in done]
     print(f"{len(df)} items, {len(todo)} requests to do")
 
     lock, used = threading.Lock(), {"tok": 0, "n": 0, "bad": 0, "err": 0, "err_run": 0}
@@ -143,16 +151,17 @@ def run(out: Path, limit: int | None, concurrency: int, max_tokens_total: int, d
                 seed=p["seed"],
                 response_format=_schema(keys),
             )
+            msg = r.choices[0].message
             try:
-                o = json.loads(r.choices[0].message.content)
-                outs = [o[k] for k in keys]
-                ok = valid(outs)
+                o = json.loads(msg.content)
+                ok = valid([o[k] for k in keys])
             except (json.JSONDecodeError, KeyError, TypeError):
                 o, ok = None, False
             if ok:
                 break
         return {
             "item_id": iid, "condition": cond, "field": field, "attempts": attempt, "valid": ok, "output": o,
+            "refusal": getattr(msg, "refusal", None),
             "request_id": r.id, "model": r.model, "system_fingerprint": r.system_fingerprint,
             "input_tokens": r.usage.prompt_tokens, "output_tokens": r.usage.completion_tokens,
             "ts": datetime.now(timezone.utc).isoformat(timespec="milliseconds"), "prompt_sha256": phash,
@@ -200,6 +209,7 @@ def assemble(out: Path) -> None:
     rows = [json.loads(l) for l in (out / RAW).open(encoding="utf-8")]
     last = {}
     for r in rows:  # a later valid row supersedes an earlier invalid one
+        r["valid"] = row_ok(r)
         k = (r["item_id"], r["condition"], r["field"])
         if r["valid"] or k not in last:
             last[k] = r
