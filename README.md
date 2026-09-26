@@ -2,7 +2,7 @@
 
 > **Verdict (jev-1.13.0, n=600 paired items per dataset, pre-registered):** on XNLI, Jev is **measurably worse and less calibrated in Russian** — accuracy 88.3% → 77.3% (paired Δ = -11.0 pp, 95% CI [-14.2, -7.8]) and ECE 0.032 → 0.096 (Δ = +0.063 [+0.033, +0.088]); on MASSIVE intent classification there is **no detectable difference at n=600** — accuracy 86.7% vs 85.2% (Δ = -1.5 pp [-3.5, +0.2]), ECE 0.066 vs 0.071 (Δ = +0.005 [-0.011, +0.026]).
 
-> **Follow-ups (2026-09-21, pre-registered, below):** the XNLI loss appears in **all 14 non-English languages** (−4 to −16 pp), is **not** predicted by tokenization cost or script, does **not** appear on three selection tasks (intents, topics, reading comprehension), and is a **failure to recognise entailment** that persists when the "undetermined" option is removed — not hedging.
+> **Follow-ups (2026-09-21, pre-registered, below):** the XNLI loss appears in **all 14 non-English languages** (−4 to −16 pp), is **not** predicted by tokenization cost or script, and does **not** appear on three selection tasks (intents, topics, reading comprehension). It is concentrated in under-recognising `entailment` (predictions drift to `neutral`) — the pattern Artetxe et al. (2020) attribute to XNLI's premises and hypotheses having been **translated separately**. Whether the loss belongs to the language or to the translated benchmark is not yet tested; see [Interpretation and prior work](#interpretation-and-prior-work-added-2026-09-26).
 
 ![Paired reliability diagram, English vs Russian, XNLI and MASSIVE](figures/reliability_paired.png)
 
@@ -71,7 +71,8 @@ confidence vs p_max: r=1.000/1.000, conf>p_max 0.2%/0.2%; choice≠argmax 0/1
 Reading the XNLI row of the reliability diagram: in the top bin (`p_max ≥ 0.9`, 360 Russian items) Jev states
 0.97 on average and is right 88.6% of the time; in English the same bin states 0.985 and is right 96.4%.
 The Russian accuracy loss is concentrated on `entailment` (recall 0.85 → 0.64): in Russian the model
-drifts toward `neutral` (303 vs 236 predictions), i.e. it hedges more and is still overconfident when it does.
+drifts toward `neutral` (303 vs 236 predictions) and is still overconfident when it does. (Studies 2–3 and
+[Interpretation](#interpretation-and-prior-work-added-2026-09-26) qualify what this drift means.)
 
 ![Selective accuracy vs coverage, English vs Russian](figures/selective_accuracy.png)
 
@@ -96,7 +97,7 @@ drifts toward `neutral` (303 vs 236 predictions), i.e. it hedges more and is sti
 
 - **Every one of the 14 languages is measurably worse than English on XNLI** — all 14 Δacc CIs exclude 0, from Spanish/French/German (−5.5 to −6.8 pp) to Urdu/Swahili (−16 pp); 12 of 14 ΔECE CIs exclude 0 (Bulgarian and Greek do not). Russian sits mid-pack (-11.0 pp, +0.061).
 - **The loss is not about length.** Belebele (reading comprehension over a full passage, RU costs 3.45× the tokens) loses only -1.9 pp [-3.1, -0.8] at 95–97 % accuracy, and Russian is if anything *better* calibrated there (ΔECE -0.008 [-0.013, +0.006]). Together with MASSIVE (Study 1) that is two selection tasks with no loss and one inference task with a large one.
-- **The surprise (exploratory RQ3, not a pre-registered test):** across the 14 languages the accuracy loss is almost entirely the model's drift toward `neutral`: Spearman ρ(excess-neutral share, Δacc) = -0.95, Pearson -0.97, slope ≈ −1.1 pp of accuracy per pp of excess neutral. A model that lost accuracy by confusing entailment with contradiction would not produce this line. On the drifted items (EN correct and non-neutral, other language says `neutral`; n = 964) the mean stated confidence is 0.74 — partly honest hedging — but 21 % are stated at ≥ 0.9, and 61 % of them are gold `entailment`: outside English, Jev under-recognises that a premise *supports* a hypothesis and retreats to "undetermined".
+- **The surprise (exploratory RQ3, not a pre-registered test):** across the 14 languages the accuracy loss is almost entirely the model's drift toward `neutral`: Spearman ρ(excess-neutral share, Δacc) = -0.95, Pearson -0.97, slope ≈ −1.1 pp of accuracy per pp of excess neutral. A model that lost accuracy by confusing entailment with contradiction would not produce this line. On the drifted items (EN correct and non-neutral, other language says `neutral`; n = 964) the mean stated confidence is 0.74 — partly honest hedging — but 21 % are stated at ≥ 0.9, and 61 % of them are gold `entailment`: outside English, Jev under-recognises that a premise *supports* a hypothesis and retreats to "undetermined". *(Added 2026-09-26: this pattern — under-predicted entailment, over-predicted neutral on translated XNLI — was already described for RoBERTa/XLM-R by Artetxe et al. 2020, §4.5. It is a replication in a new model class, not a new mechanism.)*
 
 ![Excess neutral vs accuracy loss, 14 languages](figures/panorama_neutral_drift.png)
 
@@ -147,11 +148,13 @@ English reference: accuracy 0.882, ECE 0.036 (floor 0.018).
 
 **Pre-registered ([PREREG-3.md](PREREG-3.md)) on 600 *new* XNLI items (validation split, none seen before), the same 15 languages, plus two controls; 33,720 calls, 0 errors, $0.66.**
 
-1. **H1 — the neutral-drift mechanism replicates: CONFIRMED.** ρ(excess `neutral`, Δacc) = **-0.96** (permutation p = 0.0001, item-bootstrap CI [-0.98, -0.81]); **88%** of the 1,132 items lost in a non-English language were predicted `neutral`. Every language is again measurably worse than English (all 14 Δacc CIs exclude 0; median -9.4 pp). The Study-2 negative result also holds: ρ(token ratio, ΔECE) = +0.35 on the fresh items.
+1. **H1 — the neutral-drift pattern replicates on fresh items: CONFIRMED by the pre-registered rule.** ρ(excess `neutral`, Δacc) = **-0.96** (permutation p = 0.0001, item-bootstrap CI [-0.98, -0.81]); **88%** of the 1,132 items lost in a non-English language were predicted `neutral`. Every language is again measurably worse than English (all 14 Δacc CIs exclude 0; median -9.4 pp). The Study-2 negative result also holds: ρ(token ratio, ΔECE) = +0.35 on the fresh items.
+   *Caveat (post-hoc, 2026-09-26, not pre-registered and not yet in `make reproduce`):* the rule compared the 88 % against a 50 % "errors spread evenly" baseline, which was too weak. In **English**, 62 of 63 errors on gold entailment/contradiction items (98 %) are already `neutral`. So the 88 % describes Jev's general error mode on XNLI, not a language-specific mechanism, and the ρ follows almost by construction once errors go to `neutral`. What H1 does establish is that the loss outside English is *more of the same kind of error*.
 
 ![Neutral drift on fresh items](figures/mechanism_fresh_drift.png)
 
-2. **H2 — is it hedging or blindness? Blindness.** We asked the same fresh items a second way, with no "undetermined" option ("Given `premise`, is `hypothesis` true?" → `entailment` / `not_entailment`). If the loss were the model retreating to a safe option under uncertainty, removing the option should recover most of the entailment gap. It recovers none of it: mean recovery **-9%** [-34%, +10%] over ru/sw/de/th/bg → **recognition failure dominant**. In the binary framing the model simply answers `not_entailment` (recall on non-entailment items stays 0.96–0.98 in every language, so this is not a labelling artefact). **Outside English, Jev under-detects that a premise supports a hypothesis; `neutral` is merely where that miss lands when the option exists.** The contradiction side is affected less (ru: recall 0.84 → 0.74 three-way, recovery +20 % binary, exploratory).
+2. **H2 — hedging or recognition failure? Recognition failure, by the pre-registered rule.** We asked the same fresh items a second way, with no "undetermined" option ("Given `premise`, is `hypothesis` true?" → `entailment` / `not_entailment`). If the loss were the model retreating to a safe option under uncertainty, removing the option should recover most of the entailment gap. It recovers none of it: mean recovery **-9%** [-34%, +10%] over ru/sw/de/th/bg → **recognition failure dominant**. In the binary framing the model simply answers `not_entailment` (recall on non-entailment items stays 0.96–0.98 in every language). The contradiction side is affected less (ru: recall 0.84 → 0.74 three-way, recovery +20 % binary, exploratory).
+   *Caveat (2026-09-26):* the binary framing still leaves a safe answer (`not_entailment`), so it separates the two explanations less cleanly than the rule assumed. A post-hoc check points the same way: the AUC of `p(entailment)` for entailment vs neutral items drops from 0.96 (EN) to 0.88–0.93 in other languages (ru 0.90), and a per-language class-bias correction closes only a small part of the gap. What this cannot tell apart is *why* the entailment is harder to see: the language itself, or the translated pairs (see Interpretation).
 
 ![Recall on entailment items, 3-way vs binary](figures/mechanism_recovery.png)
 
@@ -159,7 +162,16 @@ English reference: accuracy 0.882, ECE 0.036 (floor 0.018).
 
 ![Inference vs selection across 14 languages](figures/mechanism_tasks.png)
 
-**What this means in one paragraph.** Jev's non-English weakness is not a general "worse at other languages" tax, not tokenization, not script, not input length. It is specific: **cross-lingual recognition of entailment.** Selection among options — intents, topics, answer choices — is essentially language-independent; asking whether one statement follows from another is not, and the failure mode is a false "does not follow" that is stated with confidence (ECE rises in 12 of 14 languages). For a practitioner: a Russian (or German, or Spanish) `Noul`/`Choice` of the form "is X true given Y?" will systematically under-fire; a "which of these is it?" question will not.
+**What this means in one paragraph.** Jev's non-English weakness is not a general "worse at other languages" tax, not tokenization, not script, not input length. Selection among options — intents, topics, answer choices — transfers across languages essentially intact. The one task that loses is judging whether one sentence follows from another, on a benchmark whose sentence pairs were translated one sentence at a time; the miss is a false "does not follow", stated with confidence (ECE rises in 12 of 14 languages). For a practitioner the result holds either way: **English-tuned confidence thresholds do not transfer**, and "is X true given Y?" questions on non-English text should be re-validated per language. Whether the loss comes from the language or from how the benchmark was translated is the next, separate study.
+
+## Interpretation and prior work (added 2026-09-26)
+
+- **Translation artifact.** XNLI's premises and hypotheses were translated **separately** (Conneau et al., 2018). Artetxe, Labaka & Agirre (2020, [EMNLP](https://aclanthology.org/2020.emnlp-main.618/)), §4.5, show that on translated XNLI, RoBERTa/XLM-R "underpredict entailment and overpredict neutral", which they attribute to lower premise–hypothesis lexical overlap after independent translation, and conclude the cross-lingual gap on XNLI was overestimated. Our Studies 2–3 find the same pattern in a 2026 commercial decision model. That is a replication, not a new mechanism. Artetxe et al. (2023, [EMNLP](https://aclanthology.org/2023.emnlp-main.399/)) find that translating XNLI pairs jointly raises translate-test accuracy by about 3 pp.
+- **Broken labels.** XNLI labels were copied from English. Native re-annotation (Agrawal et al., 2024, [EACL](https://arxiv.org/abs/2402.02080)) agrees with the English label only 60–67 % of the time for Hindi/Urdu vs 90 % for English, mostly on neutral↔entailment, so part of any "neutral drift" may be label change rather than model error. The same paper reports the largest human-vs-MT XNLI gap among European languages for Russian (4.9 points).
+- **Calibration across languages** is known to be worse for multilingual encoders (Ahuja et al., 2022, [EMNLP](https://aclanthology.org/2022.emnlp-main.290/)) and LLMs (Zhou et al., 2025, [arXiv](https://arxiv.org/abs/2510.03136)); an English-to-other-language gap on XNLI is also known for GPT-4 (MEGA, Ahuja et al., 2023, [EMNLP](https://aclanthology.org/2023.emnlp-main.258/)). Our tokenization null result contrasts with MEGA's negative fertility correlation, which spans a wider range of languages where fertility and pretraining share are confounded.
+- **Independent replication.** A separate Spanish audit of the same model ([marcosmartinez/jev-acento](https://github.com/marcosmartinez/jev-acento)) finds −6.4 pp on XNLI and −6.2 pp on PAWS-X (another separately-translated sentence-pair task), and smaller losses (−3 to −4 pp) on MASSIVE and Belebele. Our "selection tasks lose essentially nothing" is therefore best read as "much less than sentence-pair tasks".
+
+**What is new here:** a pre-registered, paired audit of accuracy *and* calibration of a typed decision model across 15 languages and four task types, with ECE noise floors; the negative tokenization result; the practical finding that English confidence gates do not transfer; and the replication of the XNLI translation artifact in a 2026 model.
 
 <details><summary>Study 3 tables (generated by <code>make reproduce3</code>)</summary>
 
@@ -236,7 +248,7 @@ English reference: accuracy 0.902, ECE 0.051.
 ## Limitations
 
 - One prompt wording per dataset (a sample of size 1 from wording space). Option keys and MASSIVE glosses are English in the Russian arm — a deliberate control that also means the Russian cell is not a fully-Russian deployment. The RU-instruction cells (C/D) are frozen in `prompts/*.ru.json` but not run here.
-- XNLI labels were annotated on the English text and copied to the translations; ~15% of XNLI items are ambiguous even to humans. That ceiling applies to both arms equally, which is why the comparison is paired.
+- XNLI labels were annotated on the English text and copied to the translations; ~15% of XNLI items are ambiguous even to humans. The pairing controls for item difficulty, but **not** for what translation does to an item: premises and hypotheses were translated separately (lower overlap, see Interpretation), and some labels no longer hold in the translation. The EN–L gaps on XNLI therefore mix a language effect with a benchmark-translation effect.
 - n=600 resolves ±3 pp on the paired accuracy delta and a ratio-2 calibration effect; the MASSIVE result is "not detected at this n", not "equal". ECE bins below 0.9 hold 1–84 items (counts printed under the chart).
 - Black-box API: results are for `jev-1.13.0` on 2026-09-20; the raw responses are committed so the numbers survive model updates even if the API does not.
 - Two datasets, one model, no baseline system. Baselines (fine-tuned `xlm-roberta`, a zero-shot LLM with log-probs) are follow-up work, not part of this measurement.
@@ -275,5 +287,6 @@ Method conventions (pinned revisions, per-example artefacts, paired bootstrap) f
 ECE noise-floor framing after Guo et al. 2017 and the `netcal` reference implementation.
 
 MIT for the code and the derived rows in this repository. Datasets keep their own licenses
-(MASSIVE: Apache-2.0 on the mirror / CC BY 4.0 upstream; XNLI: no license tag on the HF card) — only
+(MASSIVE: Apache-2.0 on the mirror / CC BY 4.0 upstream; XNLI: CC BY-NC 4.0, see the
+[LICENSE](https://github.com/facebookresearch/XNLI/blob/main/LICENSE) in facebookresearch/XNLI) — only
 our own measurements are redistributed, re-join on `item_id` to recover the text.
