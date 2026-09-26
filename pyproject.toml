@@ -13,6 +13,8 @@ dependencies = [
     "numpy>=2.0",
     "matplotlib>=3.9",
     "python-dotenv>=1.0",
+    "openai>=3.19.2",
+    "pymorphy3>=2.0.6",
 ]
 
 [dependency-groups]

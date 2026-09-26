@@ -1,0 +1,9 @@
+{
+  "purpose": "Study 4: EN->RU machine translation of XNLI test pairs, separate vs joint. Wording fixed in the 2026-09-26 pilot; joint adds context only (no mention of NLI, premise/hypothesis or consistency).",
+  "model": "gpt-4.1-mini-2025-04-14",
+  "temperature": 0,
+  "seed": 20260926,
+  "system": "You are a professional English-to-Russian translator.",
+  "separate": "Translate the following English text into Russian. Return JSON with a single key \"text_1\".\n\ntext_1: {text_1}",
+  "joint": "Translate the following two English texts into Russian. Return JSON with keys \"text_1\" and \"text_2\".\n\ntext_1: {text_1}\ntext_2: {text_2}"
+}
